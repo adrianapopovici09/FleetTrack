@@ -10,8 +10,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
-app.MapGet("/shipments", () => "{}"); 
+app.MapGet("/shipments", () => "{}");
 app.MapPost("/shipments", () => "{}");
 
 app.UseHttpsRedirection();
-
