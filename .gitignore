@@ -63,3 +63,54 @@ coverage*.xml
 Thumbs.db
 Desktop.ini
 
+# ---------------------------------------------------------------------------
+# Frontend (web/) — build output, tooling caches
+# ---------------------------------------------------------------------------
+node_modules/
+dist/
+build/
+.vite/
+.angular/
+.next/
+out/
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+
+# ---------------------------------------------------------------------------
+# Browser/E2E test artifacts
+# ---------------------------------------------------------------------------
+coverage/
+playwright-report/
+blob-report/
+test-results/
+.nyc_output/
+
+# ---------------------------------------------------------------------------
+# Local secrets and dev certificates (never commit)
+# ---------------------------------------------------------------------------
+appsettings.*.local.json
+*.env.local
+.env.*.local
+secrets.json
+*.pfx
+*.p12
+
+# ---------------------------------------------------------------------------
+# Local infra / Aspire runtime data
+# ---------------------------------------------------------------------------
+.aspire/
+azurite/
+*.mdf
+*.ldf
+
+# ---------------------------------------------------------------------------
+# Infrastructure as code (keep *.terraform.lock.hcl committed!)
+# ---------------------------------------------------------------------------
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars.local
+
+
