@@ -9,7 +9,7 @@
 - **Method:** define the target (SLO) → reproduce under load → profile → fix one thing → re-measure → record.
 - **Tools:** BenchmarkDotNet (micro), `dotnet-counters` / `dotnet-trace` / `dotnet-gcdump` (runtime), `EXPLAIN ANALYZE` (SQL), **k6** (system load).
 - **Latency:** p50/p95/p99, tail latency, coordinated omission, Little's law, connection-pool and thread-pool limits.
-- **Caching layers:** HTTP (`Cache-Control`, ETag, output cache) → in-process (L1) → distributed (Redis, L2). **HybridCache** combines L1 + L2 with stampede protection and tag-based invalidation.
+- **Caching layers:** HTTP (`Cache-Control`, ETag, output cache) → in-process (L1) → distributed (Valkey/Redis, L2). **HybridCache** combines L1 + L2 with stampede protection and tag-based invalidation.
 - **Cache correctness:** keys include tenant + version; TTL + jitter; invalidation by tag/version vs delete; stampede (thundering herd); never cache per-user data in shared caches without the user in the key.
 - **Capacity maths:** requests/s × cost per request → instances, DB connections, cost.
 
@@ -21,13 +21,13 @@ Read: [Performance best practices (ASP.NET Core)](https://learn.microsoft.com/as
   ✅ `docs/perf/M10-baseline.md`: RPS at the knee, p95/p99, error rate, and the first resource that saturated (CPU, DB connections, thread pool…).
 - [ ] **L2 · Profile and fix the top hotspot.** Use `dotnet-trace` + flame graph (PerfView or speedscope) and `dotnet-counters` during the load; find the top 2 issues (allocations, sync I/O, chatty SQL, serialisation) and fix them one at a time.
   ✅ A before/after table for each fix; a rejected hypothesis is written down too.
-- [ ] **L3 · Manual cache-aside first.** Cache the shipment details with `IDistributedCache` + Redis (add Redis to compose) by hand: key design (`tenant:{t}:shipment:{id}:v{n}`), TTL with jitter, invalidation on update via the domain event.
+- [ ] **L3 · Manual cache-aside first.** Cache the shipment details with `IDistributedCache` + Valkey (add `valkey/valkey` to compose; it speaks the Redis protocol, so you use the normal StackExchange.Redis-based packages) by hand: key design (`tenant:{t}:shipment:{id}:v{n}`), TTL with jitter, invalidation on update via the domain event.
   ✅ A test proves updates are visible immediately after the write (no stale read) and another tenant can never get the cached entry.
-- [ ] **L4 · HybridCache.** Replace L3 with `HybridCache` (L1 + Redis L2), tag-based invalidation (`shipment:{id}`, `tenant:{t}`). Simulate a stampede (500 concurrent misses on one key) with and without it.
+- [ ] **L4 · HybridCache.** Replace L3 with `HybridCache` (L1 + Valkey L2), tag-based invalidation (`shipment:{id}`, `tenant:{t}`). Simulate a stampede (500 concurrent misses on one key) with and without it.
   ✅ Measured DB hits during the stampede: hand-rolled vs HybridCache.
 - [ ] **L5 · HTTP-level caching.** Output caching for the public tracking page (vary by tracking number; evict by tag on status change); `ETag`/304 for shipment GETs (reuse M02).
   ✅ k6 re-run with numbers vs the baseline.
-- [ ] **L6 · SLOs & capacity.** Define SLOs (e.g. shipment list p95 < 200 ms, 99.9% success); compute the capacity for 10× today's tenants (instances, DB connections, Redis memory).
+- [ ] **L6 · SLOs & capacity.** Define SLOs (e.g. shipment list p95 < 200 ms, 99.9% success); compute the capacity for 10× today's tenants (instances, DB connections, Valkey memory).
   ✅ `docs/perf/slo.md` with the SLOs, capacity maths and the next bottleneck you predict.
 
 ## Break it

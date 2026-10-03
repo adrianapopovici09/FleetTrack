@@ -7,7 +7,7 @@ Almost every .NET team is now asked to "add AI". The architect's job is to put t
 
 ## Concepts
 - **Where AI belongs:** the model translates intent into calls to *existing* use cases; pricing, legality and authorization stay in code. A kill switch on every AI path.
-- **`Microsoft.Extensions.AI`:** `IChatClient`, `IEmbeddingGenerator`, middleware pipeline (function invocation, logging, OTel, caching, rate limiting); provider swap (Ollama locally ↔ Azure OpenAI).
+- **`Microsoft.Extensions.AI`:** `IChatClient`, `IEmbeddingGenerator`, middleware pipeline (function invocation, logging, OTel, caching, rate limiting); provider swap by configuration (Ollama locally; Azure OpenAI / GitHub Models only as optional, free-tier experiments).
 - **Tool calling:** tools = typed functions with schemas; authorization and tenant scoping enforced *inside* the tool; writes → approval step.
 - **Structured output:** JSON schema-constrained responses, validation, repair/refuse.
 - **RAG:** chunking, embeddings, pgvector (HNSW), hybrid search (full-text + vector) with tenant filters, citations, a "no answer" path. Use SQL for structured questions.
@@ -19,8 +19,8 @@ Read: [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-
 
 ## Labs
 
-- [ ] **L1 · Boundary + provider abstraction.** Add `ollama/ollama` to compose (a small model, e.g. `llama3.2` or `qwen2.5`); an `Assistant` module using `IChatClient` built with a middleware pipeline (OTel, logging, function invocation); provider chosen by config (Ollama ↔ Azure OpenAI); a feature flag + kill switch.
-  ✅ Switching providers is a config change only; AI spans with token counts appear in Grafana; the kill switch disables the assistant without a deploy.
+- [ ] **L1 · Boundary + provider abstraction.** Add `ollama/ollama` to compose (a small model, e.g. `llama3.2` or `qwen2.5`); an `Assistant` module using `IChatClient` built with a middleware pipeline (OTel, logging, function invocation); provider chosen by config (Ollama by default; prove the swap with a second free provider such as GitHub Models, or with a fake `IChatClient` in tests); a feature flag + kill switch.
+  ✅ Switching providers is a config change only (proven with a second provider or a test double); AI spans with token counts appear in Grafana; the kill switch disables the assistant without a deploy.
 - [ ] **L2 · Tools over existing use cases.** Tools: `find_shipments(status, dateRange)`, `get_shipment(trackingNumber)`, `get_last_position(shipmentId)`, plus `propose_reschedule(...)`, which creates an *approval request* instead of writing. Each tool calls the existing slice/handler with the **caller's** identity and tenant.
   ✅ Tests: the assistant can't return another tenant's shipment even when asked to; the write tool never mutates without approval; every tool call is audited (who, tenant, args hash, result).
 - [ ] **L3 · Structured output.** "Summarise delays for my shipments this week" → a typed `DelayReport` (schema-constrained), validated, with a deterministic fallback when the model output is invalid.

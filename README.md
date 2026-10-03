@@ -23,15 +23,17 @@ The system evolves the way real systems do: **layered API → modular monolith �
    FleetTrack monolith              Tracking service ◄── gRPC stream ── devices
    (Shipments · Dispatch ·          (ingest, positions,
     Billing modules)                 geofences, SignalR)
-        │      ▲  events (outbox) via RabbitMQ / Service Bus  ▲      │
+        │      ▲  events (outbox) via RabbitMQ                ▲      │
         ▼      └──────────────────────────────────────────────┘      ▼
    Postgres (fleettrack)                                  Postgres (tracking)
-   + Redis · Keycloak · OpenTelemetry → Grafana · Ollama / Azure OpenAI
+   + Valkey · Keycloak · OpenTelemetry → Grafana · Ollama (local LLM)
 ```
 
 ## Stack
 
-.NET 10 · Minimal APIs · EF Core 10 + Dapper · PostgreSQL 17 (PostGIS, pgvector) · RabbitMQ / Azure Service Bus · Wolverine · gRPC · SignalR · HybridCache + Redis · YARP · Keycloak (OIDC) · OpenTelemetry + Grafana · docker compose → Azure Container Apps (Bicep, GitHub Actions) · Aspire (as the comparison in M13) · Microsoft.Extensions.AI + MCP · NUnit, Testcontainers, ArchUnitNET, k6.
+.NET 10 · Minimal APIs · EF Core 10 + Dapper · PostgreSQL 17 (PostGIS, pgvector) · RabbitMQ · Wolverine · gRPC · SignalR · HybridCache + Valkey · YARP · Keycloak (OIDC) · OpenTelemetry + Grafana · docker compose → Azure Container Apps free tier (Bicep, GitHub Actions) · Aspire (as the comparison in M13) · Microsoft.Extensions.AI + MCP · NUnit, Testcontainers, ArchUnitNET, k6.
+
+**Cost: $0.** Everything is free or open source; the cloud module uses free-tier SKUs only, and has a local Kubernetes fallback (see [plan §4](docs/plans/plan.md)).
 
 ## Current status
 

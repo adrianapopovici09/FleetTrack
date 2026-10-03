@@ -11,7 +11,7 @@ High-throughput ingestion and real-time push are classic system-design topics, a
 - **Unreliable devices:** retries, duplicates, out-of-order and late data, clock skew; idempotency keys `(device_id, recorded_at)`.
 - **Time-series in Postgres:** declarative range partitioning by day, BRIN indexes, retention by dropping partitions, `COPY` binary import.
 - **Spatial:** PostGIS `geography`, GiST indexes, `ST_Contains`/`ST_DWithin`, NetTopologySuite in EF.
-- **Push:** SignalR hubs, groups per tenant/shipment, coalescing (latest position only), throttling, reconnection; Redis backplane for scale-out.
+- **Push:** SignalR hubs, groups per tenant/shipment, coalescing (latest position only), throttling, reconnection; a Redis-protocol backplane (Valkey) for scale-out.
 
 Read: [gRPC on .NET](https://learn.microsoft.com/aspnet/core/grpc/) · [Channels](https://learn.microsoft.com/dotnet/core/extensions/channels) · [Postgres partitioning](https://www.postgresql.org/docs/current/ddl-partitioning.html) · [PostGIS intro](https://postgis.net/workshops/postgis-intro/) · [SignalR scale-out](https://learn.microsoft.com/aspnet/core/signalr/scale)
 
@@ -27,7 +27,7 @@ Read: [gRPC on .NET](https://learn.microsoft.com/aspnet/core/grpc/) · [Channels
   ✅ Measurements: insert rate, "last 24 h for one device" query time, table/index size, retention cost (`DROP` partition vs `DELETE`).
 - [ ] **L5 · Geofences.** Depot/customer polygons (`geography`); on each batch, detect enter/exit transitions per device (only *changes* emit `GeofenceEntered`/`GeofenceExited` via the outbox). Shipments reacts: arrival at the destination geofence → `AtDestination`.
   ✅ Tests with fixture tracks: a vehicle crossing a fence emits exactly one enter + one exit; jitter at the border doesn't flap (add hysteresis/dwell time).
-- [ ] **L6 · Live push with SignalR.** `TrackingHub` with groups per tenant and per shipment; push **coalesced** positions (latest per vehicle per second). A tiny HTML page + the JS client draws positions. Stretch: Redis backplane in compose + two API instances.
+- [ ] **L6 · Live push with SignalR.** `TrackingHub` with groups per tenant and per shipment; push **coalesced** positions (latest per vehicle per second). A tiny HTML page + the JS client draws positions. Stretch: Valkey backplane (`AddStackExchangeRedis`) in compose + two API instances.
   ✅ Simulator → ingest → hub → browser shows vehicles moving. A load note: messages/s sent vs received after coalescing.
 
 ## Break it

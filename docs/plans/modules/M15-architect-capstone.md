@@ -19,7 +19,7 @@ Read: [C4 model](https://c4model.com/) · [Strangler fig](https://learn.microsof
 
 - [ ] **L1 · Legacy modernisation kata.** Create a small "legacy" app (an ASP.NET Web API style app with a shared static DB helper and no tests; ideally a real .NET Framework 4.8 project if you have Windows tooling). Put it behind **YARP** (reuse M09's gateway), write characterisation tests, then migrate two endpoints into FleetTrack one at a time by flipping routes.
   ✅ Clients see no change while routes move; characterisation tests pass against both implementations. `docs/design/modernisation.md` covers the full plan for a real 200-endpoint app (order, auth/session sharing, data, rollback, when to stop). **ADR-020**.
-- [ ] **L2 · C4 + architecture overview.** Context, container (gateway, monolith, Tracking, Postgres ×2, broker, Redis, Keycloak, LLM provider, Azure services) and component (Shipments module) diagrams as code in `docs/architecture/`; a one-page "architecture overview" with the key decisions and their ADRs.
+- [ ] **L2 · C4 + architecture overview.** Context, container (gateway, monolith, Tracking, Postgres ×2, broker, Valkey, Keycloak, LLM provider, Azure services) and component (Shipments module) diagrams as code in `docs/architecture/`; a one-page "architecture overview" with the key decisions and their ADRs.
   ✅ Someone unfamiliar can explain FleetTrack's architecture after 20 minutes of reading.
 - [ ] **L3 · ADR review.** Reread all ADRs: which were wrong or superseded? Write supersede notes, add "what we learned" to two of them, and make sure each has a revisit trigger.
   ✅ An ADR index table with statuses in `docs/decisions/README.md`.

@@ -83,7 +83,7 @@ Update the status and quiz score as you go. Status: `☐` not started · `◐` i
 | M10 | [Performance & caching](modules/M10-performance-caching.md) | 1.5 | Profiling, allocations, `HybridCache` + Redis, output caching, k6, SLOs, capacity maths | ☐ | — |
 | M11 | [Security & multi-tenancy](modules/M11-security-tenancy.md) | 2 | OIDC (Keycloak), policies, BOLA, service-to-service auth, Postgres RLS, rate limiting, secrets, threat model | ☐ | — |
 | M12 | [Observability & operations](modules/M12-observability.md) | 1 | OpenTelemetry by hand across gateway → services → broker, metrics, logs, Grafana LGTM, SLO alerts, game day | ☐ | — |
-| M13 | [Cloud, delivery & Aspire](modules/M13-cloud-delivery.md) | 2 | Container images, hand-written Bicep → Container Apps, GitHub OIDC, migration bundles, Service Bus, Key Vault; **then Aspire + `azd` as the comparison** | ☐ | — |
+| M13 | [Cloud, delivery & Aspire](modules/M13-cloud-delivery.md) | 2 | Container images, hand-written Bicep → Container Apps (free tier) or k3d, GitHub OIDC, migration bundles, Key Vault; **then Aspire + `azd` as the comparison** | ☐ | — |
 | M14 | [AI-native features](modules/M14-ai-native.md) | 2 | `Microsoft.Extensions.AI`, tool calling, structured output, RAG on pgvector, MCP server, evals in CI | ☐ | — |
 | M15 | [Architect's toolkit & capstone](modules/M15-architect-capstone.md) | 1.5 | Legacy modernisation (strangler fig), C4, ADR review, mock design interviews, .NET 11 upgrade | ☐ | — |
 | M16 | [Frontend slice](modules/M16-frontend-optional.md) *(optional)* | 1.5 | React + TS + TanStack Query, generated client, live map, Playwright E2E | ☐ | — |
@@ -112,20 +112,35 @@ Each row is decided properly in the module that introduces it. The "why" here is
 | Handlers | **Plain handler classes** first, then **Wolverine** in M06 | Learn the pattern without magic; Wolverine is MIT and covers in-process handlers, messaging, outbox and sagas in one tool | MediatR (commercial since 2025), MassTransit (v9 commercial) |
 | Database | **PostgreSQL 17 + PostGIS + pgvector** (one custom image) | One engine covers relational, JSONB, spatial, vectors and partitioned time-series. Learn to defend "just use Postgres". | SQL Server, TimescaleDB, Cosmos DB |
 | ORM / reads | **EF Core 10** for writes, **Dapper** for hot reads | The real-world combination; teaches when an ORM helps and when it hurts | EF-only, Marten |
-| Messaging | **RabbitMQ** locally → **Azure Service Bus** in cloud (via Wolverine) | Swapping the transport by config shows why the abstraction matters | Kafka (M08/M09 design drills) |
+| Messaging | **RabbitMQ** (local and in the cloud deployment) | Free and portable; Wolverine keeps the transport swappable | Azure Service Bus (discussed in M13; Standard tier isn't free), Kafka (M08/M09 design drills) |
 | Service-to-service | **Messages by default; gRPC** where a synchronous call is justified | Forces you to argue sync vs async per interaction | REST between services |
 | Device ingest | **gRPC client streaming** | gRPC skills are expected in senior .NET roles; streaming fits device telemetry | HTTP batch POST, MQTT |
-| Real-time | **SignalR** + Redis backplane | Standard .NET push stack | SSE, Azure Web PubSub |
-| Caching | **HybridCache** (L1 + Redis L2) + output caching | The modern .NET caching API with stampede protection built in | `IDistributedCache` directly |
+| Real-time | **SignalR** + Valkey/Redis backplane | Standard .NET push stack | SSE, Azure SignalR / Web PubSub (paid) |
+| Caching | **HybridCache** (L1 + **Valkey** L2, Redis-compatible) + output caching | The modern .NET caching API with stampede protection built in; Valkey is the BSD-licensed Redis fork, and the same client/API applies | Redis, `IDistributedCache` directly |
 | Identity | **Keycloak** container locally; Entra ID discussed | Real OIDC flows without a cloud tenant | Entra ID, Duende IdentityServer |
 | Resilience | `Microsoft.Extensions.Http.Resilience` (Polly v8) | Built-in standard pipeline | Raw Polly |
 | Testing | **NUnit** (already set up) + **Testcontainers** + `WebApplicationFactory` + **ArchUnitNET** + **Verify** + **Bogus** + **k6** | Real databases in tests, executable architecture rules, snapshot API contracts | xUnit v3, TUnit, EF InMemory (avoid) |
 | Observability | **OpenTelemetry** SDK configured by hand → **Grafana LGTM** container (Tempo, Loki, Prometheus, Grafana) | Vendor-neutral; you wire every exporter yourself; the same signals locally and in the cloud | Seq, Application Insights, Aspire dashboard |
-| Cloud | **Azure Container Apps** with **hand-written Bicep** + GitHub Actions (OIDC) | The most common .NET cloud target, at the lowest operational cost; writing Bicep yourself teaches what's actually deployed | AKS, App Service; `azd`/Aspire-generated infra (M13 comparison) |
-| AI | **`Microsoft.Extensions.AI`** over **Ollama** (local) / Azure OpenAI, **pgvector**, **MCP C# SDK**, `Microsoft.Extensions.AI.Evaluation` | Provider-neutral .NET abstractions; MCP is the standard tool protocol | Semantic Kernel, Microsoft Agent Framework (agentic stretch) |
+| Cloud | **Azure Container Apps** (free tier) with **hand-written Bicep** + GitHub Actions (OIDC); fallback **k3d/kind** locally | The most common .NET cloud target; Container Apps has a monthly free grant; writing Bicep yourself teaches what's actually deployed | AKS, App Service; `azd`/Aspire-generated infra (M13 comparison) |
+| AI | **`Microsoft.Extensions.AI`** over **Ollama** (local, free), **pgvector**, **MCP C# SDK**, `Microsoft.Extensions.AI.Evaluation` | Provider-neutral .NET abstractions mean the paid providers are a config change you can *discuss* without paying for | Azure OpenAI, GitHub Models; Semantic Kernel, Microsoft Agent Framework |
 | Frontend (optional) | **React + TypeScript + Vite + TanStack Query** | Largest market; demonstrates a client architecture | Blazor |
 
 **Licence rule:** check the production licence before adding any package and note it in the ADR.
+
+### Cost: $0
+
+Everything in this plan is free or open source. The two places that *could* cost money have free paths built in:
+
+| Area | Free choice | Notes |
+| --- | --- | --- |
+| IDE | VS Code + C# Dev Kit, Visual Studio Community, or Rider (free for non-commercial use) | — |
+| Everything local | .NET, Postgres/PostGIS/pgvector, RabbitMQ, **Valkey** (BSD fork of Redis, drop-in compatible), Keycloak, Grafana LGTM, Ollama, YARP | All run in docker compose on your machine |
+| Libraries | Wolverine, EF Core, Dapper, Scalar, NUnit, Testcontainers, ArchUnitNET, Verify, Bogus, BenchmarkDotNet | MIT/Apache. Commercial-licence libraries are deliberately excluded (MediatR, AutoMapper, MassTransit v9, FluentAssertions v8). |
+| Tools | k6, oasdiff, gitleaks, Trivy, Stryker.NET, Pact, PerfView | Free / OSS |
+| CI | GitHub Actions + GitHub Container Registry (`ghcr.io`) | Free for public repos; ~2,000 min/month on private repos is enough for this plan |
+| **Cloud (M13)** | Azure **free account** (credit for 30 days + 12 months of free services) with free-tier SKUs only, a **$1 budget alert** and teardown after every session | No free credit available? Do M13 against a local Kubernetes cluster (**k3d/kind**) instead: the same pipeline and IaC lessons, $0. Azure needs a card on signup even for the free tier. |
+| **AI (M14)** | **Ollama** locally (default) | Optional free hosted alternative: GitHub Models (rate-limited free tier). Azure OpenAI is never required. |
+| Maps (M16) | MapLibre + OpenFreeMap / free demo tiles | No API key needed |
 
 ---
 

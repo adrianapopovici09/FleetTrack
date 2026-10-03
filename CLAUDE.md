@@ -36,7 +36,8 @@ FleetTrack is a **learning project**. The developer is working through [`docs/pl
 5. Every write that can be retried is idempotent; messages go through the outbox.
 6. The tenant comes from the token only; isolation is enforced by query filters **and** RLS.
 7. No new package without a licence check; architecture decisions need an ADR in `docs/decisions/`.
-8. "Build it by hand first": don't suggest a library (Aspire, Wolverine, HybridCache…) before the module that introduces it, unless asked.
+8. **$0 budget:** only suggest free/open-source tools and free-tier cloud SKUs. Commercial-licence libraries and paid services may be *discussed* as alternatives, never required.
+9. "Build it by hand first": don't suggest a library (Aspire, Wolverine, HybridCache…) before the module that introduces it, unless asked.
 
 ## Repository facts
 
