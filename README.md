@@ -9,13 +9,14 @@ A **fleet & freight tracking platform** built deliberately as an architect/senio
 | Path | Purpose |
 | --- | --- |
 | [`docs/plans/plan.md`](docs/plans/plan.md) | **The plan** — 29 weeks · 145 build days (5 build days + D6 integrate + D7 review each week), checkbox tracker, phase gates, stack table |
+| [`docs/plans/tasks/`](docs/plans/tasks/README.md) | **Day-level how-to** — Read (primary sources) → Build (concrete task) → Done when, for all 145 days, plus a resource cheat-sheet per theme |
 | [`agent.md`](agent.md) | Working file — guardrails, architecture syllabus (incl. AI/LLM/MCP), domain model, **ADR register**, quiz + worked examples for every day, commands, session log |
 | `FleetTrack/` | Solution (`FleetTrack.slnx`) + API project |
 | `docs/adr/` | Architecture decision records (created from W1D2) |
 
 ## Current status
 
-**Phase 0 · W1D1 — .NET 10 LTS bootstrap & build guardrails** (not started). The repo today holds the solution, a minimal-API scaffold, CI/hygiene groundwork and these docs.
+**Phase 0 · W1D1 — .NET 10 LTS bootstrap & build guardrails** (started). The repo today holds the solution, a minimal-API scaffold, CI/hygiene groundwork and these docs.
 
 ## Stack (every choice is backed by an ADR)
 
@@ -33,7 +34,7 @@ A **fleet & freight tracking platform** built deliberately as an architect/senio
 
 ## How to work the plan
 
-One session = one day (≈2–3 h): read the day's *focus* concept → build the artifact → answer the day's check question from `agent.md` §7 without looking → on D6/D7 write the ADR and log the session. Flip the checkbox in `plan.md` when the artifact exists. Full loop: [`agent.md`](agent.md) §1.
+One session = one day (≈2–3 h): open the day in [`docs/plans/plan.md`](docs/plans/plan.md), then follow that day's **Read → Build → Done when** entry in [`docs/plans/tasks/`](docs/plans/tasks/README.md); answer the day's check question from `agent.md` §7 without looking; on D6/D7 write the ADR and log the session. Flip the checkbox when the artifact exists. Full loop: [`agent.md`](agent.md) §1.
 
 Ask the agent anything at any time: *"quiz me on week 6"*, *"grade my answers for week 3"*, *"review my ADR-009"*, *"critique this diagram"*, *"what breaks if Tracking became a service?"*.
 

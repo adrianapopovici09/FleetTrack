@@ -1,7 +1,8 @@
 # FleetTrack — Engineering & Architecture Plan (29 weeks · 145 build days)
 
 > **This file is the plan.** There is one plan, no versions and no archived history: the checkbox list below is both the curriculum and the tracker.
-> Working file — architecture syllabus, ADR register, quiz answers with worked examples: [`agent.md`](../../agent.md). Project overview and quick start: [`README.md`](../../README.md).
+> **How to do each day (readings + concrete task + done-when): [`tasks/`](tasks/README.md)** — one file per phase, covering all 145 days.
+> Working file — architecture syllabus, ADR register, quiz answers with worked examples: [`agent.md`](../../agent.md). Project overview: [`README.md`](../../README.md).
 
 ## How this plan works
 
@@ -50,8 +51,8 @@
 
 ### Week 1 — Toolchain, guardrails, local topology
 
-- [ ] **W1D1 · .NET 10 LTS bootstrap & build guardrails** — `global.json`, `net10.0`, central package management (`Directory.Packages.props`), `Directory.Build.props` (nullable, `TreatWarningsAsErrors`, analyzers, `EnforceCodeStyleInBuild`), `.editorconfig` → *props files + build passes clean* · **focus: LTS vs STS policy**
-- [ ] **W1D2 · Solution topology & the dependency rule** — `src/`, `tests/`, `web/`, `docs/adr/`; `.slnx` project map; who may reference whom (`Api → Application → Domain`, `Infrastructure` implements ports) → *solution + reference matrix* · **focus: dependency inversion**
+- [x] **W1D1 · .NET 10 LTS bootstrap & build guardrails** — `global.json`, `net10.0`, central package management (`Directory.Packages.props`), `Directory.Build.props` (nullable, `TreatWarningsAsErrors`, analyzers, `EnforceCodeStyleInBuild`), `.editorconfig` → *props files + build passes clean* · **focus: LTS vs STS policy**
+- [~] **W1D2 · Solution topology & the dependency rule** — `src/`, `tests/`, `web/`, `docs/adr/`; `.slnx` project map; who may reference whom (`Api → Application → Domain`, `Infrastructure` implements ports) → *solution + reference matrix* · **focus: dependency inversion**
 - [ ] **W1D3 · Local topology with Aspire AppHost** — Postgres/Timescale, RabbitMQ, Redis, Seq/OTel collector, MinIO, Mailpit as resources; connection strings and health from the AppHost → *AppHost runs `dotnet run`* · **focus: dev/prod parity** · ADR-001
 - [ ] **W1D4 · Test harness on day one** — xUnit + FluentAssertions + `WebApplicationFactory` + first Testcontainers Postgres test; coverage collection configured → *green `dotnet test`* · **focus: shift-left**
 - [ ] **W1D5 · CI from day one + agent guardrails** — GitHub Actions (restore/build/test/format/analyzers, `dotnet list package --vulnerable`, Dependabot, required checks, PR template) **and** the AI-assist baseline: `AGENTS.md`/Copilot instructions encoding the dependency rule + ADR rule, plus read-only MCP dev servers (git, Postgres, OpenAPI, Aspire) wired into the coding agent → *CI green + agent guardrails committed* · **focus: fitness before features; guardrails for AI-assisted work**

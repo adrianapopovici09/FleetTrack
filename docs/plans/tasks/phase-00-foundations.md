@@ -6,7 +6,7 @@
 
 ## Week 1 — Toolchain, guardrails, local topology
 
-### W1D1 · .NET 10 LTS bootstrap & build guardrails
+### W1D1 ·.NET 10 LTS bootstrap & build guardrails
 **Read:** [.NET support policy (LTS vs STS)](https://dotnet.microsoft.com/platform/support/policy/dotnet-core) · [Central Package Management](https://learn.microsoft.com/nuget/consume-packages/central-package-management) · [Code analysis overview](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/overview)
 **Build:** ① `dotnet new globaljson --sdk-version 10.0.100 --roll-forward latestFeature` ② `Directory.Build.props`: `Nullable`, `TreatWarningsAsErrors`, `EnforceCodeStyleInBuild`, `EnableNETAnalyzers`, `AnalysisLevel=latest-recommended`, `ImplicitUsings` ③ `Directory.Packages.props` with `ManagePackageVersionsCentrally` and move the OpenAPI package version out of the csproj ④ add `.editorconfig` ⑤ `dotnet build` and fix every newly-flagged warning.
 **Done when:** clean build from the repo root, `dotnet format --verify-no-changes` exits 0, `docs/adr/ADR-002-runtime-and-guardrails.md` written (LTS over STS; why warnings are errors).

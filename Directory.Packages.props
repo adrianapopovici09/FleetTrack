@@ -1,0 +1,18 @@
+<Project>
+	<PropertyGroup>
+		<!-- Enable central package management, https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management -->
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Package versions for src -->
+		<PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12"/>
+		<PackageVersion Include="coverlet.collector" Version="6.0.4" />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
+		
+		<!-- Package versions for tests -->
+		<PackageVersion Include="NUnit" Version="4.3.2" />
+		<PackageVersion Include="NUnit.Analyzers" Version="4.7.0" />
+		<PackageVersion Include="NUnit3TestAdapter" Version="5.0.0" />
+	</ItemGroup>
+</Project>

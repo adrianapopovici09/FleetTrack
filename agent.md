@@ -10,12 +10,12 @@
 
 One session = one day from `plan.md`, ≈ 2–3 focused hours:
 
-1. **Pick up:** open `plan.md`, take the first unchecked day.
+1. **Pick up:** open `plan.md`, take the first unchecked day; open the matching day in `docs/plans/tasks/` for its **Read** links and **Build** steps.
 2. **Prime (5 min):** read the day's *focus* concept in §4 below and write one line in the journal: *"this matters because …"*. Never skip this — it's what turns typing into learning.
-3. **Build:** produce the day's artifact. Keep tests running (`dotnet test`) and CI green.
+3. **Read + Build:** skim the day's primary sources (15–40 min), then produce the artifact; keep tests and CI green.
 4. **Self-quiz (10 min):** answer that day's questions in §7 **without looking at the answers**, then read them plus the worked example. If you can't state the *trade-off* and *when NOT to use it*, the day isn't done.
 5. **Record (D6/D7 only):** write/append the ADR, update the ADR register (§5), update the session log (§8).
-6. **Close the loop:** flip the checkbox in `plan.md`; note any plan deviation — a deviation only counts once it's an ADR.
+6. **Close the loop:** verify the day's `Done when` literally, flip the checkbox in `plan.md`; note any plan deviation — a deviation only counts once it's an ADR.
 
 **How to use me as the agent:** ask for any of these, at any time —
 `quiz me on week 6` (I ask, you answer, I grade) · `review my ADR-007` · `critique this design/diagram` · `find the leak in this slice` · `what would break if Tracking became a service?` · `give me a harder variant of this exercise` · `explain X with a FleetTrack example`.
@@ -776,6 +776,8 @@ git status --short ; git check-ignore -v <path> ; git rm -r --cached <path>
 4. Write **ADR-002** (runtime + guardrails) in `docs/adr/`, flip W1D1 to `[x]` in `plan.md`, log it above.
 5. At the end of week 1 (W1D5): commit `AGENTS.md` + `.mcp.json` (read-only dev MCP servers) so agent assistance is guard-railed from the start.
 6. Ask me: *"quiz me on week 1"* before moving to W1D2.
+
+> Full step-by-step for every day (readings, build steps, done-when): [`docs/plans/tasks/`](docs/plans/tasks/README.md).
 
 ### 8.3 Deviation log
 

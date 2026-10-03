@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/FleetTrack.PublicAPI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FleetTrack.PublicAPI.UnitTests/FleetTrack.PublicAPI.UnitTests.csproj" Id="73d488b7-7daa-4e9d-8ace-8ad2cf90769c" />
+  </Folder>
+</Solution>
