@@ -2,42 +2,53 @@
 
 **Time:** ~12 h · **Prereq:** M01 · **Outcome:** a shipment API whose contract is documented, validated, versioned, concurrency-safe and retry-safe, with tests proving each property.
 
-## Why it matters
-"Design an API for X" is a top interview and work request. Senior engineers are judged on the parts juniors skip: error contracts, versioning, pagination at volume, lost updates and retries.
+**Why it matters:** "design an API for X" is a top interview and work request. Senior engineers are judged on the parts juniors skip: error contracts, versioning, pagination at volume, lost updates and retries.
 
-## Concepts
-- **Minimal APIs at scale:** route groups per feature, `TypedResults`, endpoint filters, built-in OpenAPI document + Scalar UI.
-- **Validation:** .NET 10 built-in minimal-API validation (`AddValidation()` + DataAnnotations) vs FluentValidation; shape validation at the edge, business rules in the domain.
-- **Errors:** RFC 9457 `ProblemDetails`, stable `type` URIs, `IExceptionHandler`, mapping table.
-- **Versioning:** URL vs header vs media type; additive change; deprecation (`Sunset`/`Deprecation` headers).
-- **Pagination:** offset vs keyset (cursor); stable sort keys; opaque cursors.
-- **Concurrency:** `ETag` + `If-Match` → `412 Precondition Failed`; lost updates.
-- **Idempotency:** `Idempotency-Key` for POST; replay vs conflict; storage and expiry.
+Persistence can be a simple EF `DbContext` here; M03 does the data layer properly. Each task: 📖 **Learn** → 🔨 **Build** → ✅ **Done when**.
 
-Read: [Minimal APIs overview](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/overview) · [OpenAPI in ASP.NET Core](https://learn.microsoft.com/aspnet/core/fundamentals/openapi/overview) · [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) · [Idempotency-Key draft](https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/) · [Microsoft REST API guidelines](https://github.com/microsoft/api-guidelines)
+---
 
-## Labs
-Persistence can be a simple EF `DbContext` here; M03 does the data layer properly.
+### T1 · Minimal API endpoints + OpenAPI
+- 📖 **Learn (45 min):** [Minimal APIs overview](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/overview) · [Route groups](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/route-handlers#route-groups) · [TypedResults](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/responses) · [OpenAPI document generation](https://learn.microsoft.com/aspnet/core/fundamentals/openapi/aspnetcore-openapi) · [Scalar for ASP.NET Core](https://guides.scalar.com/scalar/scalar-api-references/integrations/net-aspnet-core)
+- 🔨 **Build:** route group `/api/v1/shipments` with `POST`, `GET {id}`, `GET` (list) and `PATCH {id}/status`; `TypedResults`; `201 Created` + `Location`; built-in OpenAPI + `app.MapScalarApiReference()`.
+- ✅ **Done when:** Scalar shows all endpoints with request/response schemas, and an integration test posts a shipment and gets the same one back.
 
-- [ ] **L1 · Shipment endpoints + OpenAPI.** Route group `/api/v1/shipments` with `POST`, `GET {id}`, `GET` (list), `PATCH {id}/status`; `TypedResults`; `201 Created` + `Location`; built-in OpenAPI + `app.MapScalarApiReference()`.
-  ✅ Scalar shows all endpoints with request/response schemas; an integration test posts and gets back the same shipment.
-- [ ] **L2 · Validation + error contract.** `builder.Services.AddValidation()`; `AddProblemDetails()`; an `IExceptionHandler` for unexpected errors; a table of error `type`s (`https://fleettrack.dev/errors/validation`, `.../not-found`, `.../conflict`…) in `docs/api/errors.md`.
-  ✅ Tests: invalid body → 400 with field errors; unknown id → 404; every error response is `application/problem+json` with a documented `type`.
-- [ ] **L3 · Keyset pagination.** `GET /shipments?limit=50&cursor=…&status=…`, sorted by `(created_at, id)`, opaque base64 cursor, `next` link in the response. Seed 5,000 rows.
-  ✅ A test inserts rows *between* page requests and proves no duplicates or gaps; a second test shows the offset version producing a duplicate.
-- [ ] **L4 · Optimistic concurrency with ETags.** Return `ETag` (based on Postgres `xmin`) on GET; require `If-Match` on PATCH → `412` on mismatch, `428` if missing.
-  ✅ A test with two "dispatchers" editing the same shipment: the second gets 412 and nothing is overwritten.
-- [ ] **L5 · Idempotent POST.** Middleware/endpoint filter storing `(tenant, key) → request hash + response` in Postgres with a 24 h expiry.
-  ✅ Tests: same key + same body → identical 201 replayed and only one row created; same key + different body → 422/409; two concurrent requests with the same key → exactly one row (unique constraint, not a check-then-insert).
-- [ ] **L6 · Contract safety net.** Snapshot the OpenAPI document with **Verify** in a test; add **oasdiff** to CI to flag breaking changes; add `Asp.Versioning.Http` and write the versioning policy.
-  ✅ Renaming a response property fails the snapshot test and oasdiff reports it as breaking.
+### T2 · Validation & the error contract
+- 📖 **Learn (45 min):** [RFC 9457: Problem Details](https://www.rfc-editor.org/rfc/rfc9457) (sections 3–4) · [Handle errors in APIs](https://learn.microsoft.com/aspnet/core/fundamentals/error-handling-api) (`AddProblemDetails`, `IExceptionHandler`) · [Minimal API validation in .NET 10](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis#validation-support-in-minimal-apis)
+- 🔨 **Build:** `builder.Services.AddValidation()` with DataAnnotations on request records; `AddProblemDetails()`; an `IExceptionHandler` for unexpected errors; a table of stable `type` URIs (`https://fleettrack.dev/errors/validation`, `.../not-found`, `.../conflict`…) in `docs/api/errors.md`.
+- ✅ **Done when:** tests show invalid body → 400 with field errors, unknown id → 404, and every error is `application/problem+json` with a documented `type`.
 
-## Break it
-Remove the `If-Match` requirement and run the two-dispatcher test. Then remove the unique constraint in L5 and fire 20 parallel POSTs with the same key. Count the duplicates.
+### T3 · Keyset pagination
+- 📖 **Learn (30 min):** [We need tool support for keyset pagination (Use The Index, Luke)](https://use-the-index-luke.com/no-offset) · [Pagination in EF Core](https://learn.microsoft.com/ef/core/querying/pagination) (keyset section)
+- 🔨 **Build:** `GET /shipments?limit=50&cursor=…&status=…`, sorted by `(created_at, id)`, with an opaque base64 cursor and a `next` link. Seed 5,000 rows.
+- ✅ **Done when:** a test inserting rows *between* page requests proves no duplicates or gaps, and a second test shows the offset version producing a duplicate.
 
-## Decide
-- **ADR-004** Error contract (ProblemDetails types, exceptions vs results at the boundary; revisit in M04).
-- **ADR-005** Versioning & breaking-change policy.
+### T4 · Optimistic concurrency with ETags
+- 📖 **Learn (30 min):** [MDN: ETag](https://developer.mozilla.org/docs/Web/HTTP/Reference/Headers/ETag) and [If-Match](https://developer.mozilla.org/docs/Web/HTTP/Reference/Headers/If-Match) · [Handling concurrency conflicts (EF Core)](https://learn.microsoft.com/ef/core/saving/concurrency) · [Npgsql: concurrency tokens with xmin](https://www.npgsql.org/efcore/modeling/concurrency.html)
+- 🔨 **Build:** return an `ETag` (from Postgres `xmin`) on GET; require `If-Match` on PATCH → `412` on mismatch, `428` if missing.
+- ✅ **Done when:** a test with two "dispatchers" editing the same shipment gives the second one a 412, and nothing is overwritten.
+
+### T5 · Idempotent POST
+- 📖 **Learn (30 min):** [IETF draft: the Idempotency-Key header](https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/) · [Designing robust APIs with idempotency (Stripe)](https://stripe.com/blog/idempotency) · [Endpoint filters](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/min-api-filters)
+- 🔨 **Build:** an endpoint filter that stores `(tenant, key) → request hash + response` in Postgres, with a 24 h expiry and a unique constraint.
+- ✅ **Done when:** tests show same key + same body → identical 201 replayed and one row created; same key + different body → 422/409; two concurrent requests with the same key → exactly one row.
+
+### T6 · Contract safety net & versioning
+- 📖 **Learn (40 min):** [Asp.Versioning wiki](https://github.com/dotnet/aspnet-api-versioning/wiki) · [Microsoft REST API guidelines: versioning](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#api-versioning) · [Verify snapshot testing](https://github.com/VerifyTests/Verify) · [oasdiff: breaking-change detection](https://github.com/oasdiff/oasdiff)
+- 🔨 **Build:** snapshot the OpenAPI document with Verify in a test; add oasdiff to CI; add `Asp.Versioning.Http` and write the versioning policy.
+- ✅ **Done when:** renaming a response property fails the snapshot test, and oasdiff reports it as breaking.
+
+### T7 · Break it
+- 📖 **Learn (10 min):** reread "check-then-act" race conditions in the Stripe article (T5).
+- 🔨 **Build:** remove the `If-Match` requirement and rerun the two-dispatcher test; remove the unique constraint from T5 and fire 20 parallel POSTs with the same key.
+- ✅ **Done when:** you've recorded the lost update and the duplicate count, then restored both protections.
+
+### T8 · Decide: ADR-004 & ADR-005
+- 📖 **Learn (20 min):** [Microsoft REST API guidelines: errors](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#handling-errors)
+- 🔨 **Build:** **ADR-004** error contract (ProblemDetails types; exceptions vs results at the boundary, revisited in M04). **ADR-005** versioning & breaking-change policy.
+- ✅ **Done when:** both ADRs have ≥2 options, negative consequences and revisit triggers.
+
+---
 
 ## Quiz → [answers](../answers/M02.md)
 1. Why is keyset pagination more stable *and* faster than offset at volume? When is offset still fine?
@@ -58,4 +69,4 @@ Remove the `If-Match` requirement and run the two-dispatcher test. Then remove t
 M01 Q2 · M01 Q6 · M00 Q6
 
 ## Exit check
-L3, L4 and L5 tests are green, OpenAPI snapshot + oasdiff in CI, ADR-004/005 written.
+T3, T4 and T5 tests green, OpenAPI snapshot + oasdiff in CI, ADR-004/005 written.

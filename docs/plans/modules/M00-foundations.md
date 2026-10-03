@@ -2,44 +2,73 @@
 
 **Time:** ~9 h · **Prereq:** none · **Outcome:** a repo where the build, tests, local stack and architecture rules are automatic, and where you understand every piece because you wrote it.
 
-## Why it matters
-"Set up a new service the team can't easily break" is a classic senior task. Interviewers ask how you'd keep a codebase healthy at scale: analyzers, CI gates and architecture tests are the answer. Knowing containers, health checks and configuration by hand is what lets you debug them when a tool's abstraction leaks.
+**Why it matters:** "set up a new service the team can't easily break" is a classic senior task. Interviewers ask how you'd keep a codebase healthy at scale, and knowing containers, configuration and health checks by hand is what lets you debug them when a tool's abstraction leaks.
 
-## Concepts
-- **SDK pinning & LTS policy:** `global.json` + `rollForward`; LTS (3 years) vs STS (2 years since .NET 9).
-- **Central Package Management:** one version per package for the whole repo (`Directory.Packages.props`).
-- **Build-wide settings:** `Directory.Build.props` applies to every project (nullable, warnings-as-errors, analyzers).
-- **Containers for dev:** images vs containers, volumes, networks, port mapping, env vars, `healthcheck` + `depends_on: condition: service_healthy`.
-- **Configuration:** the provider order (appsettings → env-specific → user-secrets → env vars → command line), `__` for nesting in env vars, options pattern + `ValidateOnStart()`.
-- **Health checks:** liveness ("process is up") vs readiness ("can serve traffic: DB reachable"); why mixing them causes restart loops.
-- **Real dependencies in tests:** Testcontainers starts a real Postgres for the test run. The EF InMemory provider lies about SQL semantics.
-- **Fitness functions:** tests that fail when the architecture is violated.
+Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 
-Read: [Central Package Management](https://learn.microsoft.com/nuget/consume-packages/central-package-management) · [Compose file reference](https://docs.docker.com/reference/compose-file/) · [Configuration in ASP.NET Core](https://learn.microsoft.com/aspnet/core/fundamentals/configuration/) · [Health checks](https://learn.microsoft.com/aspnet/core/host-and-deploy/health-checks) · [Testcontainers for .NET](https://dotnet.testcontainers.org/)
+---
 
-## Labs
+### T1 · SDK pinning & Central Package Management ✔ done
+- 📖 **Learn (20 min):** LTS (3 years) vs STS (2 years) support, and how `rollForward` picks an SDK. [.NET support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core) · [global.json overview](https://learn.microsoft.com/dotnet/core/tools/global-json) · [Central Package Management](https://learn.microsoft.com/nuget/consume-packages/central-package-management)
+- 🔨 **Build:** `global.json` + `Directory.Packages.props`.
+- ✅ **Done when:** packages have no versions in `.csproj` files.
 
-- [x] **L1 · SDK + CPM.** `global.json` and `Directory.Packages.props` exist. ✅ Done.
-- [x] **L2 · Layered skeleton.** `src/` Domain / Application / Infrastructure / API, references follow the dependency rule. ✅ Done.
-- [x] **L3 · Build guardrails.** 
-Create `Directory.Build.props` at the root with `Nullable=enable`, `TreatWarningsAsErrors=true`, `EnforceCodeStyleInBuild=true`, `AnalysisLevel=latest-recommended`, `ImplicitUsings=enable`. Add an `.editorconfig` (`dotnet new editorconfig`; the `.slnx` already references one that doesn't exist yet). Add the missing `app.Run()` at the end of `Program.cs`. Fix whatever breaks.
-  ✅ `dotnet build` from the root has 0 warnings; `dotnet format --verify-no-changes` exits 0; an unused variable now fails the build.
-- [ ] **L4 · Local stack with docker compose.** `deploy/compose.yaml` with **Postgres 17** only: named volume, `POSTGRES_*` env vars from a git-ignored `.env` file (commit a `.env.example`), a `pg_isready` healthcheck. Optionally add pgAdmin. Connect with `psql` from the container and from your host.
-  ✅ `docker compose -f deploy/compose.yaml up -d` → `docker compose ps` shows Postgres `healthy`; data survives `down` + `up` (and is gone after `down -v`). You can explain each line of the file.
-- [ ] **L5 · Config + health, by hand.** In Infrastructure: `DatabaseOptions` bound from `ConnectionStrings:FleetTrack` with `ValidateOnStart()`. In the API: `AddHealthChecks().AddNpgSql(...)` (`AspNetCore.HealthChecks.NpgSql`), `/health/live` (no dependencies) and `/health/ready` (checks the DB) instead of the hand-written string endpoint. Put this in your own `AddFleetTrackDefaults()` / `MapFleetTrackDefaults()` extension methods. You'll grow them in later modules and compare them with Aspire's ServiceDefaults in M13. Local connection string via `dotnet user-secrets`.
-  ✅ Missing connection string → app fails at startup with a clear message. Stopping the Postgres container → `/health/ready` returns 503 while `/health/live` stays 200.
-- [ ] **L6 · Test harness.** Rename the test project to `FleetTrack.UnitTests`. Add `FleetTrack.IntegrationTests` (NUnit + `Testcontainers.PostgreSql` + `Microsoft.AspNetCore.Mvc.Testing`) with one test that runs `SELECT version()` on a container, and one `WebApplicationFactory` test hitting `/health/ready` with the container's connection string injected. Add `FleetTrack.ArchitectureTests` with **ArchUnitNET** (or NetArchTest) rules: Domain depends on no framework and no other project; Application doesn't reference Infrastructure.
-  ✅ `dotnet test` green with no local Postgres running (Testcontainers handles it). Adding `using Microsoft.EntityFrameworkCore;` to a Domain class makes an architecture test fail.
-- [ ] **L7 · CI.** `.github/workflows/ci.yml`: checkout → setup-dotnet (reads `global.json`) → restore → build → format check → test (Testcontainers works on `ubuntu-latest`) → `dotnet list package --vulnerable --include-transitive`. Add `dependabot.yml` (nuget + github-actions + docker) and branch protection requiring the check.
-  ✅ A PR shows the check; a PR with a formatting violation is blocked.
+### T2 · Layered skeleton & the dependency rule ✔ done
+- 📖 **Learn (30 min):** the dependency rule: dependencies point inward, and the core owns the interfaces (ports) that the infrastructure implements. [Architectural principles (Microsoft)](https://learn.microsoft.com/dotnet/architecture/modern-web-apps-azure/architectural-principles) · [Common web application architectures: Clean Architecture](https://learn.microsoft.com/dotnet/architecture/modern-web-apps-azure/common-web-application-architectures#clean-architecture)
+- 🔨 **Build:** `src/` Domain / Application / Infrastructure / API with references `API → Application → Domain`, `Infrastructure → Application`.
+- ✅ **Done when:** it builds and the reference matrix is in ADR-003.
 
-## Break it
-1. Point `/health/live` at the database check, stop Postgres, and imagine an orchestrator restarting every instance on each DB blip. Write down why liveness must not depend on downstream systems.
-2. Create a "temporary" reference from Domain to Infrastructure and push it. Watch the architecture test catch it in CI.
+### T3 · Build guardrails ◀ NEXT TASK
+- 📖 **Learn (30 min):**
+  - `Directory.Build.props` applies MSBuild properties to every project below it. [Customize your build by folder](https://learn.microsoft.com/visualstudio/msbuild/customize-by-directory)
+  - .NET analyzers, `AnalysisLevel` and enforcing code style at build time. [Code analysis overview](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/overview) (read "Enable additional rules" and "Enforce on build")
+  - `.editorconfig` severities. [Configuration files for code analysis](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/configuration-files)
+  - Nullable reference types. [Nullable reference types](https://learn.microsoft.com/dotnet/csharp/nullable-references)
+- 🔨 **Build:** `Directory.Build.props` at the root with `Nullable=enable`, `TreatWarningsAsErrors=true`, `EnforceCodeStyleInBuild=true`, `AnalysisLevel=latest-recommended`, `ImplicitUsings=enable`. Add an `.editorconfig` (`dotnet new editorconfig`; the `.slnx` already references one that doesn't exist yet). Add the missing `app.Run()` to `Program.cs`. Fix whatever breaks. Then add the "Build guardrails" section to ADR-002.
+- ✅ **Done when:** `dotnet build` from the root shows 0 warnings; `dotnet format --verify-no-changes` exits 0; an unused variable now fails the build.
 
-## Decide
-- **ADR-001** Local dev environment: docker compose vs running services natively vs Aspire (deferred to M13; record *why* you're deferring it).
-- Complete **ADR-002** (why warnings are errors, LTS policy) and **ADR-003** (fill in the bad consequences and a revisit trigger; the plan revisits it in M05 and M09).
+### T4 · Local stack with docker compose
+- 📖 **Learn (45 min):**
+  - Images vs containers, volumes, networks, port mapping. [Docker overview](https://docs.docker.com/get-started/docker-overview/) · [Volumes](https://docs.docker.com/engine/storage/volumes/)
+  - Compose services, `.env` files, `healthcheck`, `depends_on: condition: service_healthy`. [Compose file reference: services](https://docs.docker.com/reference/compose-file/services/) · [Startup order](https://docs.docker.com/compose/how-tos/startup-order/)
+  - The official Postgres image's env vars and init scripts. [postgres on Docker Hub](https://hub.docker.com/_/postgres) (read "Environment Variables" and "Initialization scripts")
+- 🔨 **Build:** `deploy/compose.yaml` with **Postgres 17** only: a named volume, `POSTGRES_*` from a git-ignored `.env` (commit a `.env.example`), and a `pg_isready` healthcheck. Optionally add pgAdmin. Connect with `psql` both inside the container and from your host.
+- ✅ **Done when:** `docker compose -f deploy/compose.yaml up -d` → `docker compose ps` shows Postgres `healthy`; data survives `down` + `up` and is gone after `down -v`; you can explain each line of the file.
+
+### T5 · Configuration & health checks, by hand
+- 📖 **Learn (45 min):**
+  - Configuration providers and their precedence; `__` in env var names. [Configuration in ASP.NET Core](https://learn.microsoft.com/aspnet/core/fundamentals/configuration/) (read "Default application configuration sources" and "Environment variables")
+  - Options pattern + validation at startup. [Options pattern](https://learn.microsoft.com/dotnet/core/extensions/options) (read "Options validation" and `ValidateOnStart`)
+  - Local secrets. [Safe storage of app secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets)
+  - Liveness vs readiness. [Health checks in ASP.NET Core](https://learn.microsoft.com/aspnet/core/host-and-deploy/health-checks) (read "Separate readiness and liveness probes")
+- 🔨 **Build:** `DatabaseOptions` bound from `ConnectionStrings:FleetTrack` with `ValidateOnStart()`. Add `AddHealthChecks().AddNpgSql(...)` (package `AspNetCore.HealthChecks.NpgSql`) with `/health/live` (no dependencies) and `/health/ready` (checks the DB), replacing the hand-written `/health` string. Put it in your own `AddFleetTrackDefaults()` / `MapFleetTrackDefaults()` extension methods; you'll grow them later and compare with Aspire in M13. Local connection string via `dotnet user-secrets`.
+- ✅ **Done when:** a missing connection string makes the app fail at startup with a clear message; stopping Postgres → `/health/ready` returns 503 while `/health/live` stays 200.
+
+### T6 · Test harness with real dependencies
+- 📖 **Learn (45 min):**
+  - Why not EF InMemory: it isn't a relational database. [Choosing a testing strategy (EF Core)](https://learn.microsoft.com/ef/core/testing/choosing-a-testing-strategy)
+  - Integration tests with `WebApplicationFactory`. [Integration tests in ASP.NET Core](https://learn.microsoft.com/aspnet/core/test/integration-tests)
+  - Testcontainers for Postgres. [Testcontainers for .NET: PostgreSQL module](https://dotnet.testcontainers.org/modules/postgres/)
+  - Architecture tests. [ArchUnitNET guide](https://archunitnet.readthedocs.io/en/latest/guide/) (or [NetArchTest README](https://github.com/BenMorris/NetArchTest))
+- 🔨 **Build:** rename the test project to `FleetTrack.UnitTests`. Add `FleetTrack.IntegrationTests` (NUnit + `Testcontainers.PostgreSql` + `Microsoft.AspNetCore.Mvc.Testing`) with one test running `SELECT version()` on a container, and one `WebApplicationFactory` test hitting `/health/ready` with the container's connection string injected. Add `FleetTrack.ArchitectureTests`: Domain depends on no framework and no other project; Application doesn't reference Infrastructure.
+- ✅ **Done when:** `dotnet test` is green with no local Postgres running; adding `using Microsoft.EntityFrameworkCore;` to a Domain class fails an architecture test.
+
+### T7 · Continuous integration
+- 📖 **Learn (30 min):** [Building and testing .NET with GitHub Actions](https://docs.github.com/actions/use-cases-and-examples/building-and-testing/building-and-testing-net) · [Dependabot options](https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference) · [Protected branches](https://docs.github.com/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) · [`dotnet list package --vulnerable`](https://learn.microsoft.com/dotnet/core/tools/dotnet-list-package)
+- 🔨 **Build:** `.github/workflows/ci.yml`: checkout → setup-dotnet (reads `global.json`) → restore → build → format check → test (Testcontainers works on `ubuntu-latest`) → `dotnet list package --vulnerable --include-transitive`. Add `dependabot.yml` (nuget, github-actions, docker) and branch protection requiring the check.
+- ✅ **Done when:** a PR shows the check, and a PR with a formatting violation is blocked.
+
+### T8 · Break it
+- 📖 **Learn (10 min):** reread "Separate readiness and liveness probes" in the health-checks doc from T5.
+- 🔨 **Build:** (1) point `/health/live` at the DB check, stop Postgres, and write down what an orchestrator would do to every instance. (2) Push a "temporary" Domain → Infrastructure reference and watch CI catch it. Revert both.
+- ✅ **Done when:** you've written two short journal notes explaining each failure.
+
+### T9 · Decide: ADR-001, finish ADR-002/003
+- 📖 **Learn (20 min):** what makes an ADR useful later. [ADR GitHub organisation](https://adr.github.io/) · [Documenting architecture decisions (Nygard)](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)
+- 🔨 **Build:** **ADR-001**: docker compose vs native installs vs Aspire, recording *why* Aspire is deferred to M13. Finish **ADR-002** (a real "bad" consequence + revisit trigger) and **ADR-003** (revisit trigger). Use the [template](../../decisions/adr-template.md).
+- ✅ **Done when:** each ADR has ≥2 options, at least one negative consequence and a revisit trigger.
+
+---
 
 ## Quiz → [answers](../answers/M00.md)
 1. What's the difference between `Directory.Build.props` and `Directory.Packages.props`?

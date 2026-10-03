@@ -1,45 +1,48 @@
 # M11 · Security & multi-tenancy
 
-**Time:** ~16 h · **Prereq:** M10 · **Outcome:** real OIDC authentication through the gateway and services, object-level authorization, tenant isolation proven at the application *and* database level, and a threat model.
+**Time:** ~17 h · **Prereq:** M10 · **Outcome:** real OIDC authentication through the gateway and services, object-level authorization, tenant isolation proven at the application *and* database level, and a threat model.
 
-## Why it matters
-Security and tenancy are where architects are held accountable. Broken object-level authorization (BOLA) is the #1 API vulnerability, and a cross-tenant data leak can end a SaaS company. Interviewers expect you to talk tokens, scopes, and defence in depth fluently.
+**Why it matters:** security and tenancy are where architects are held accountable. Broken object-level authorization (BOLA) is the #1 API vulnerability, and a cross-tenant data leak can end a SaaS company.
 
-## Concepts
-- **OIDC / OAuth 2.0:** authorization code + PKCE (SPAs), client credentials (services), access vs ID vs refresh tokens, JWT validation (issuer, audience, lifetime, signature/JWKS).
-- **Authorization:** policies and requirements, resource-based authorization, scopes vs roles vs permissions; the API decides, the token only informs.
-- **Service-to-service:** token forwarding vs token exchange vs client credentials; never trust a downstream call just because it's "internal".
-- **Multi-tenancy models:** shared schema + `tenant_id` vs schema-per-tenant vs database-per-tenant (isolation, cost, operations, noisy neighbours).
-- **Defence in depth:** tenant from the token (never from the request body) → EF global query filters → **Postgres Row-Level Security** → isolation tests.
-- **Abuse protection:** rate limiting per tenant/client (`System.Threading.RateLimiting`), request size limits.
-- **Secrets:** user-secrets / `.env` locally → Key Vault + managed identity in the cloud (M13); secret scanning in CI.
-- **Threat modelling:** STRIDE, the OWASP API Security Top 10.
+Each task: 📖 **Learn** → 🔨 **Build** → ✅ **Done when**.
 
-Read: [OAuth 2.0 simplified](https://www.oauth.com/) · [ASP.NET Core authorization](https://learn.microsoft.com/aspnet/core/security/authorization/introduction) · [Resource-based authorization](https://learn.microsoft.com/aspnet/core/security/authorization/resourcebased) · [Postgres RLS](https://www.postgresql.org/docs/current/ddl-rowsecurity.html) · [OWASP API Top 10](https://owasp.org/API-Security/editions/2023/en/0x11-t10/) · [Multitenancy models](https://learn.microsoft.com/azure/architecture/guide/multitenant/considerations/tenancy-models)
+---
 
-## Labs
+### T1 · OIDC with Keycloak + JWT validation
+- 📖 **Learn (90 min):** authorization code + PKCE vs client credentials; access vs ID vs refresh tokens; what JWT validation must check. [OAuth 2.0 simplified](https://www.oauth.com/) (read "Authorization Code", "PKCE" and "Client Credentials") · [JWT introduction](https://jwt.io/introduction) · [Configure JWT bearer authentication](https://learn.microsoft.com/aspnet/core/security/authentication/configure-jwt-bearer-authentication) · [Keycloak: getting started with Docker](https://www.keycloak.org/getting-started/getting-started-docker) · [Keycloak: importing a realm](https://www.keycloak.org/server/importExport)
+- 🔨 **Build:** Keycloak in compose with an imported realm (`deploy/keycloak/realm.json`): two tenants, users with roles (dispatcher, customer, admin), a `tenant_id` claim mapper, a SPA client (PKCE) and a service client (client credentials). Validate JWTs at the gateway *and* in each service.
+- ✅ **Done when:** tests show no token → 401, expired/wrong-audience token → 401, valid token → 200; you've fetched a token with `curl` and decoded it yourself.
 
-- [ ] **L1 · Keycloak + JWT validation.** Add Keycloak to compose with an imported realm (`deploy/keycloak/realm.json`): two tenants, users with roles (dispatcher, customer, admin), a `tenant_id` claim mapper, a SPA client (PKCE) and a service client (client credentials). Validate JWTs at the gateway *and* in each service.
-  ✅ Tests: no token → 401; expired / wrong-audience token → 401; correct token → 200. Get a token with `curl` and decode it yourself.
-- [ ] **L2 · Policies + resource-based authorization.** A policy catalogue (`CanBookShipments`, `CanDispatch`, `CanViewShipment`) and a resource handler that checks tenant + customer ownership of the *specific* shipment.
-  ✅ A BOLA test: customer A requesting customer B's shipment id (same tenant) → 404/403. The behaviour is documented, including the choice of 404 vs 403.
-- [ ] **L3 · Service-to-service auth.** The monolith → Tracking gRPC call uses a client-credentials token (cached until near expiry); Tracking validates the audience and scope; user context is propagated explicitly where needed.
-  ✅ Calling Tracking directly without a valid service token fails; token acquisition is cached (one token request per lifetime, verified by logs).
-- [ ] **L4 · Tenant isolation in code.** `ITenantContext` from the token; EF global (named) query filters on every tenant-owned entity; tenant set automatically on insert; an architecture test forbids `IgnoreQueryFilters()` outside an allow-listed admin path. Also covers caches, message headers and SignalR groups.
-  ✅ An **isolation test matrix**: for each endpoint and each consumer, tenant A can't read or modify tenant B's data.
-- [ ] **L5 · Tenant isolation in the database (RLS).** Enable RLS on tenant tables with policies on `current_setting('app.tenant_id')`; set it per transaction (`set_config(..., true)`) via an EF interceptor; the app role is not a superuser and doesn't bypass RLS.
-  ✅ A raw SQL query without the tenant setting returns 0 rows. A query filter deliberately removed in a test still leaks nothing.
-- [ ] **L6 · Rate limits + threat model.** Per-tenant partitioned rate limiter on the gateway (429 + `Retry-After`); request size limits on ingest. Write a STRIDE threat model per entry point (gateway, gRPC ingest, SignalR, broker, admin) mapped to the OWASP API Top 10. Add secret scanning (gitleaks) to CI.
-  ✅ `docs/security/threat-model.md`, where each threat has a mitigation and a test or "accepted risk"; k6 shows the 429s; gitleaks runs in CI.
+### T2 · Policies + resource-based authorization (BOLA)
+- 📖 **Learn (45 min):** [Policy-based authorization](https://learn.microsoft.com/aspnet/core/security/authorization/policies) · [Resource-based authorization](https://learn.microsoft.com/aspnet/core/security/authorization/resourcebased) · [OWASP API1: Broken Object Level Authorization](https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/)
+- 🔨 **Build:** a policy catalogue (`CanBookShipments`, `CanDispatch`, `CanViewShipment`) and a resource handler checking tenant + customer ownership of the *specific* shipment.
+- ✅ **Done when:** a test shows customer A requesting customer B's shipment (same tenant) gets 404/403, and the 404-vs-403 choice is documented.
 
-## Break it
-1. Take the tenant id from a request header instead of the token, and impersonate another tenant with `curl`.
-2. Set `app.tenant_id` with session scope (not transaction-local) and show it leaking across pooled connections.
-3. Remove the resource handler and enumerate shipment ids.
+### T3 · Service-to-service authentication
+- 📖 **Learn (30 min):** [OAuth client credentials grant](https://www.oauth.com/oauth2-servers/access-tokens/client-credentials/) · [RFC 8693: token exchange](https://www.rfc-editor.org/rfc/rfc8693) (introduction only) · [gRPC authentication in ASP.NET Core](https://learn.microsoft.com/aspnet/core/grpc/authn-and-authz)
+- 🔨 **Build:** the monolith → Tracking gRPC call uses a client-credentials token, cached until near expiry; Tracking validates audience and scope; user context is passed explicitly where needed.
+- ✅ **Done when:** a direct call to Tracking without a valid service token fails, and logs show one token request per token lifetime.
 
-## Decide
-- **ADR-014** Identity, authorization & service-to-service auth.
-- **ADR-015** Tenancy & isolation model (and the path to DB-per-tenant for a big customer).
+### T4 · Tenant isolation in code
+- 📖 **Learn (45 min):** [Multitenancy models](https://learn.microsoft.com/azure/architecture/guide/multitenant/considerations/tenancy-models) · [EF Core: multi-tenancy](https://learn.microsoft.com/ef/core/miscellaneous/multitenancy) · [Global query filters (including named filters in EF 10)](https://learn.microsoft.com/ef/core/querying/filters)
+- 🔨 **Build:** `ITenantContext` from the token; global (named) query filters on every tenant-owned entity; tenant set automatically on insert; an architecture test forbids `IgnoreQueryFilters()` outside an allow-listed admin path. Also cover caches, message headers and SignalR groups.
+- ✅ **Done when:** an **isolation test matrix** proves that for every endpoint and consumer, tenant A can't read or modify tenant B's data.
+
+### T5 · Tenant isolation in the database (RLS)
+- 📖 **Learn (40 min):** [Postgres row security policies](https://www.postgresql.org/docs/current/ddl-rowsecurity.html) · [`set_config` and transaction-local settings](https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-ADMIN-SET) · [EF Core interceptors](https://learn.microsoft.com/ef/core/logging-events-diagnostics/interceptors)
+- 🔨 **Build:** enable RLS on tenant tables with policies on `current_setting('app.tenant_id')`; set it per transaction (`set_config(..., true)`) via an interceptor; the app role isn't a superuser and doesn't bypass RLS.
+- ✅ **Done when:** raw SQL without the tenant setting returns 0 rows, and a query filter deliberately removed in a test still leaks nothing.
+
+### T6 · Rate limits, secrets scanning & threat model
+- 📖 **Learn (60 min):** [Rate limiting middleware](https://learn.microsoft.com/aspnet/core/performance/rate-limit) · [OWASP API Security Top 10 (2023)](https://owasp.org/API-Security/editions/2023/en/0x11-t10/) · [STRIDE threat modelling](https://learn.microsoft.com/azure/security/develop/threat-modeling-tool-threats) · [gitleaks](https://github.com/gitleaks/gitleaks)
+- 🔨 **Build:** a per-tenant partitioned rate limiter at the gateway (429 + `Retry-After`), request size limits on ingest; a STRIDE threat model per entry point (gateway, gRPC ingest, SignalR, broker, admin) mapped to the OWASP API Top 10; gitleaks in CI.
+- ✅ **Done when:** `docs/security/threat-model.md` exists with each threat → mitigation → test (or accepted risk); k6 shows the 429s; gitleaks runs in CI.
+
+### T7 · Break it & decide
+- 🔨 **Build:** (1) take the tenant id from a header instead of the token and impersonate another tenant with `curl`. (2) Set `app.tenant_id` at session scope and show it leaking across pooled connections. (3) Remove the resource handler and enumerate ids. Then write **ADR-014** (identity, authorization, service-to-service auth) and **ADR-015** (tenancy model, plus the path to DB-per-tenant for a big customer).
+- ✅ **Done when:** all three attacks are documented and fixed again, and both ADRs are written.
+
+---
 
 ## Quiz → [answers](../answers/M11.md)
 1. Authorization code + PKCE vs client credentials: who uses each, and why does PKCE exist?
@@ -60,4 +63,4 @@ Read: [OAuth 2.0 simplified](https://www.oauth.com/) · [ASP.NET Core authorizat
 M10 Q6 · M09 Q9 · M02 Q5
 
 ## Exit check
-OIDC end to end (user + service), BOLA and isolation matrix tests green, RLS proven, threat model written, ADR-014/015.
+OIDC end to end (user + service), BOLA and isolation-matrix tests green, RLS proven, threat model written, ADR-014/015.

@@ -4,13 +4,13 @@ FleetTrack is a **learning project**. The developer is working through [`docs/pl
 
 ## Default behaviour
 
-- **Don't write lab solutions unprompted.** When asked for help on a lab, use the hint ladder and go one step at a time, stopping as soon as they're unblocked:
+- **Don't write task solutions unprompted.** When asked for help on a task, use the hint ladder and go one step at a time, stopping as soon as they're unblocked:
   1. Ask what they've tried, or point at the concept ("what happens to the message if the process dies between commit and publish?").
   2. Point to the exact doc section or API (`FOR UPDATE SKIP LOCKED`, `HybridCache.GetOrCreateAsync`).
   3. Pseudo-code or a small, partial snippet.
   4. Full code, only if they explicitly say "show me the solution". Then explain every non-obvious line.
-- Plumbing that isn't the point of the current lab (boilerplate, test fixtures, compose syntax) can be written directly when asked.
-- At the start of a session, read the **"📍 Where you are"** box in `plan.md`. When a lab is finished (or the session ends), update that box and tick the lab in its module file.
+- Plumbing that isn't the point of the current task (boilerplate, test fixtures, compose syntax) can be written directly when asked.
+- At the start of a session, read the **"📍 Where you are"** box in `plan.md`. When a task is finished (or the session ends), update that box and mark the task done in its module file (move the `◀ NEXT TASK` marker).
 - Always connect answers to **trade-offs and "when not to"**. That's what the interviews test.
 - Be honest: if their approach is wrong or over-engineered, say so and explain why.
 
@@ -22,10 +22,10 @@ FleetTrack is a **learning project**. The developer is working through [`docs/pl
 | `review quiz Mxx` | Ask the module's spaced-repetition questions (the "Review" section) the same way. |
 | `drill Mxx` | Act as a system-design interviewer for that module's design drill. Clarify requirements only when asked, push on estimates and failure modes, keep time (~20 min), then give structured feedback (requirements, estimates, design, trade-offs, communication). |
 | `mock interview` | A 45-min system-design interview on an unseen prompt from the plan's domain areas. |
-| `review Mxx-Ly` | Review their changes for that lab against its ✅ acceptance check, the architecture rules below, and senior-level code quality. Report findings ranked by severity. Don't fix them unless asked. |
+| `review Mxx-Ty` | Review their changes for that task against its ✅ acceptance check, the architecture rules below, and senior-level code quality. Report findings ranked by severity. Don't fix them unless asked. |
 | `explain <topic>` | Explain with a FleetTrack example, the trade-offs and when not to use it. |
-| `harder` | Give a harder variant of the current lab or question. |
-| `status` | Summarise progress from `plan.md`: current module, open labs, weak quiz topics, next step. |
+| `harder` | Give a harder variant of the current task or question. |
+| `status` | Summarise progress from `plan.md`: current module, open tasks, weak quiz topics, next step. |
 
 ## Architecture rules to enforce in reviews
 
@@ -44,4 +44,4 @@ FleetTrack is a **learning project**. The developer is working through [`docs/pl
 - .NET 10 (`global.json`), Central Package Management (`Directory.Packages.props`), tests with **NUnit**.
 - Local environment: `docker compose -f deploy/compose.yaml up -d` (built up module by module). Aspire is deliberately deferred to M13.
 - Docs: `docs/plans/` (plan, modules, answers), `docs/decisions/` (ADRs), `docs/design/`, `docs/perf/`, `docs/journal/`, `docs/architecture/`.
-- Commit messages start with the lab id: `M03-L2: keyset paging`.
+- Commit messages start with the task id: `M02-T3: keyset paging`.

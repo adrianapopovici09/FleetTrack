@@ -1,52 +1,54 @@
 # M13 · Cloud, delivery & Aspire
 
-**Time:** ~16 h · **Prereq:** M12 · Azure **free account** (free-tier SKUs only, $1 budget alert, **tear down after each session**). No free credit? Use the **$0 fallback** below. · **Outcome:** FleetTrack deployed to Azure Container Apps from your own Bicep through a GitHub Actions pipeline, with safe database migrations, then a fair, hands-on verdict on Aspire.
+**Time:** ~17 h · **Prereq:** M12 · **Outcome:** FleetTrack deployed from your own infrastructure-as-code through a GitHub Actions pipeline, with safe database migrations, then a fair, hands-on verdict on Aspire.
 
-## Why it matters
-"How would you deploy this?" follows every design discussion. Senior .NET roles expect Azure fluency, infrastructure as code, zero-downtime deploys and cost awareness. Having built the plumbing by hand, you can now judge what Aspire automates.
+**Cost:** $0. Use an Azure **free account** with free-tier SKUs only, a **$1 budget alert**, and **tear down after every session**. No free credit, or you don't want to give a card? Follow the **🆓 local path** in each task (k3d/kind): same lessons, nothing to pay.
 
-## Concepts
-- **Containers for .NET:** `dotnet publish /t:PublishContainer` (no Dockerfile needed) vs multi-stage Dockerfile; chiseled/distroless images, non-root, image size.
-- **Azure Container Apps:** environments, apps, revisions, ingress, scaling rules (HTTP, queue length via KEDA), Dapr (know it exists), jobs.
-- **Bicep:** modules, parameters per environment, outputs, `what-if`; Postgres Flexible Server, Key Vault, Log Analytics. Free-tier facts: Container Apps has a monthly free grant (vCPU-seconds, GiB-seconds, 2M requests); Postgres Flexible Server **B1ms** is free for 12 months on a free account; Log Analytics includes 5 GB/month; Key Vault costs fractions of a cent at this volume. Azure Container Registry (~$5/month) is replaced by the free **GitHub Container Registry**, and Service Bus by RabbitMQ in a container.
-- **Identity in the cloud:** managed identity for app → Key Vault/Postgres; GitHub Actions → Azure with **OIDC federated credentials** (no stored secrets).
-- **Safe delivery:** build once, promote the same image; expand/contract migrations; EF **migration bundles** as a separate pipeline step; revisions + traffic splitting; rollback.
-- **Cost:** what each resource costs idle vs under load; scale-to-zero; budgets and alerts.
-- **Aspire (at the end):** AppHost resource model, ServiceDefaults, dashboard, `aspire publish` / `azd` deployment. What it generates vs what you wrote.
+**Why it matters:** "how would you deploy this?" follows every design discussion. Senior .NET roles expect cloud fluency, infrastructure as code, zero-downtime deploys and cost awareness. Having built the plumbing by hand, you can now judge what Aspire automates.
 
-Read: [Container Apps overview](https://learn.microsoft.com/azure/container-apps/overview) · [Bicep docs](https://learn.microsoft.com/azure/azure-resource-manager/bicep/) · [Containerize with dotnet publish](https://learn.microsoft.com/dotnet/core/containers/sdk-publish) · [GitHub OIDC with Azure](https://learn.microsoft.com/azure/developer/github/connect-from-azure-openid-connect) · [EF migration bundles](https://learn.microsoft.com/ef/core/managing-schemas/migrations/applying#bundles) · [Aspire overview](https://aspire.dev/)
+Each task: 📖 **Learn** → 🔨 **Build** → ✅ **Done when**.
 
-## Labs
+---
 
-- [ ] **L1 · Production-grade images.** Publish the gateway, monolith and Tracking as containers (SDK container publish, chiseled base, non-root); graceful shutdown (`HostOptions.ShutdownTimeout`, draining).
-  ✅ Image sizes recorded; `docker stop` during a k6 run → no failed in-flight requests; a vulnerability scan (Trivy) runs in CI.
-- [ ] **L2 · Bicep by hand.** `deploy/bicep/`: modules for Log Analytics, Container Apps environment, Postgres Flexible Server **B1ms** (2 databases), Key Vault, a user-assigned managed identity, RabbitMQ as a container app, and 3 app containers pulled from `ghcr.io`; a `dev` parameters file; min replicas 0 where possible. *(Discuss, don't deploy: what would change with Azure Service Bus instead of RabbitMQ?)*
-  ✅ `az deployment group what-if` is clean; `create` builds the environment from nothing; the app works in Azure; secrets come only from Key Vault via managed identity.
-- [ ] **L3 · Pipeline with OIDC.** GitHub Actions: CI (from M00) → build images once → push to `ghcr.io` → deploy job (OIDC login, no secrets) → **migration bundle** step → smoke tests → traffic shift.
-  ✅ A merge to `main` deploys; a failing smoke test stops the rollout; the repo contains no Azure secrets.
-- [ ] **L4 · Zero-downtime schema change.** Rename a column using expand/contract over two deployments (add new column + dual write → backfill → switch reads → drop old) while k6 runs.
-  ✅ k6 shows 0 errors across both deployments; the steps are written as a reusable checklist in `docs/ops/`.
-- [ ] **L5 · Cost & teardown.** Azure budget with a **$1** alert; scale rules (Tracking on HTTP/gRPC concurrency, consumers on queue length, scale-to-zero where possible); a monthly cost estimate for 10 and 100 tenants; a one-command teardown.
-  ✅ `docs/ops/cost.md` with the estimate; the teardown script tested.
-- [ ] **L6 · Aspire, now that you know what it does.** On a branch: add an AppHost that models your compose stack (Postgres with your Dockerfile, RabbitMQ, Valkey, Keycloak, LGTM → or the Aspire dashboard) and the 3 projects; replace your `AddFleetTrackDefaults()` with ServiceDefaults in one service; generate the deployment (`aspire publish` / `azd infra gen`) and diff it against your Bicep.
-  ✅ A comparison in your journal + **ADR-016 verdict**: what Aspire gave you (onboarding, dashboard, service discovery, less YAML), what it hid or did differently, and whether FleetTrack adopts it (and for local dev only, or deployment too).
+### T1 · Production-grade container images
+- 📖 **Learn (45 min):** [Containerize an app with dotnet publish](https://learn.microsoft.com/dotnet/core/containers/sdk-publish) · [Chiseled Ubuntu containers for .NET](https://devblogs.microsoft.com/dotnet/announcing-dotnet-chiseled-containers/) · [Generic host shutdown](https://learn.microsoft.com/dotnet/core/extensions/generic-host#host-shutdown) · [Trivy](https://trivy.dev/latest/getting-started/)
+- 🔨 **Build:** publish the gateway, monolith and Tracking as containers (SDK container publish, chiseled base, non-root) with graceful shutdown (`HostOptions.ShutdownTimeout`, draining).
+- ✅ **Done when:** image sizes are recorded, `docker stop` during a k6 run causes no failed in-flight requests, and a Trivy scan runs in CI.
 
-## $0 fallback (no Azure credit)
-Same lessons, run on your machine. Use **k3d** (k3s in Docker) or **kind** as the "cloud":
-- **L2:** describe the environment as code with Kubernetes manifests + **Helm** (or Kustomize) instead of Bicep: Deployments, Services, Ingress, ConfigMaps/Secrets, probes, resource limits. Secrets come from a Kubernetes Secret (stretch: **External Secrets** or **sealed-secrets**) instead of Key Vault.
-- **L3:** a GitHub Actions deploy job builds once, pushes to `ghcr.io`, then deploys to the cluster via a self-hosted runner on your machine (or deploy locally with the same script the pipeline runs). The migration bundle runs as a Kubernetes **Job**.
-- **L4:** a rolling update with expand/contract under k6 load (0 errors).
-- **L5:** replace the cost estimate with resource requests/limits + a written estimate of what this would cost on Azure (use the pricing calculator, no account needed).
-- **L6:** Aspire is unchanged (compare `aspire publish` output for Kubernetes/compose with your Helm chart).
+### T2 · Infrastructure as code, by hand
+- 📖 **Learn (90 min):**
+  - Azure path: [Container Apps overview](https://learn.microsoft.com/azure/container-apps/overview) · [Container Apps billing & free grant](https://learn.microsoft.com/azure/container-apps/billing) · [Bicep fundamentals (Learn path)](https://learn.microsoft.com/training/paths/fundamentals-bicep/) · [Postgres Flexible Server free tier](https://learn.microsoft.com/azure/postgresql/flexible-server/how-to-deploy-on-azure-free-account) · [Managed identities](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview)
+  - 🆓 Local path: [k3d quick start](https://k3d.io/stable/) · [Kubernetes basics tutorial](https://kubernetes.io/docs/tutorials/kubernetes-basics/) · [Helm: getting started](https://helm.sh/docs/chart_template_guide/getting_started/) · [Liveness, readiness & startup probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
+- 🔨 **Build:**
+  - Azure: `deploy/bicep/` modules for Log Analytics, the Container Apps environment, Postgres Flexible Server **B1ms** (2 databases), Key Vault, a user-assigned managed identity, RabbitMQ as a container app, and the 3 apps pulled from **`ghcr.io`** (free, instead of ACR); min replicas 0 where possible.
+  - 🆓 Local: a Helm chart (Deployments, Services, Ingress, ConfigMaps/Secrets, probes, resource limits) on a k3d cluster.
+- ✅ **Done when:** the environment builds from nothing (`az deployment group what-if` is clean / `helm install` succeeds), the app works, and no secret lives in the repo or in plain config.
 
-Kubernetes skills are equally marketable, so this path loses nothing for learning purposes.
+### T3 · Pipeline with OIDC
+- 📖 **Learn (45 min):** [GitHub Actions: OIDC with Azure](https://learn.microsoft.com/azure/developer/github/connect-from-azure-openid-connect) · [Publishing to GitHub Container Registry](https://docs.github.com/packages/working-with-a-github-packages-registry/working-with-the-container-registry) · [EF Core migration bundles](https://learn.microsoft.com/ef/core/managing-schemas/migrations/applying#bundles) · 🆓 [Self-hosted runners](https://docs.github.com/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners)
+- 🔨 **Build:** CI (from M00) → build images once → push to `ghcr.io` → deploy (Azure: OIDC login, no stored secrets; 🆓 local: a self-hosted runner, or the same script run locally) → **migration bundle** step (🆓 as a Kubernetes Job) → smoke tests → traffic shift.
+- ✅ **Done when:** a merge to `main` deploys, a failing smoke test stops the rollout, and the repo contains no cloud secrets.
 
-## Break it
-1. Deploy a migration that drops a column the *previous* revision still reads, while traffic splitting is 50/50. Watch the old revision fail.
-2. Remove the managed identity's Key Vault role and observe the startup failure (and how quickly your health checks / logs reveal it).
+### T4 · Zero-downtime schema change
+- 📖 **Learn (30 min):** [Evolutionary database design (expand/contract)](https://martinfowler.com/articles/evodb.html) · [Container Apps revisions & traffic splitting](https://learn.microsoft.com/azure/container-apps/revisions) · 🆓 [Kubernetes rolling updates](https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/)
+- 🔨 **Build:** rename a column with expand/contract over two deployments (add new column + dual write → backfill → switch reads → drop old) while k6 runs.
+- ✅ **Done when:** k6 shows 0 errors across both deployments, and the steps are written as a reusable checklist in `docs/ops/`.
 
-## Decide
-**ADR-016** Cloud platform & delivery (ACA vs AKS vs App Service, Bicep vs Terraform vs generated) **and the Aspire verdict**. Revisit **ADR-001**.
+### T5 · Cost & teardown
+- 📖 **Learn (30 min):** [Azure cost management budgets](https://learn.microsoft.com/azure/cost-management-billing/costs/tutorial-acm-create-budgets) · [Azure pricing calculator](https://azure.microsoft.com/pricing/calculator/) (no account needed) · [Container Apps scaling rules](https://learn.microsoft.com/azure/container-apps/scale-app)
+- 🔨 **Build:** a $1 budget alert; scale rules (Tracking on concurrency, consumers on queue length, scale-to-zero where possible); a monthly cost estimate for 10 and 100 tenants using the calculator; a one-command teardown. (🆓 local: requests/limits per pod + the same calculator estimate.)
+- ✅ **Done when:** `docs/ops/cost.md` has the estimate and the teardown script is tested.
+
+### T6 · Aspire, now that you know what it does
+- 📖 **Learn (60 min):** [Aspire overview](https://aspire.dev/get-started/what-is-aspire/) · [AppHost & resources](https://learn.microsoft.com/dotnet/aspire/fundamentals/app-host-overview) · [Service defaults](https://learn.microsoft.com/dotnet/aspire/fundamentals/service-defaults) · [Aspire deployment overview](https://learn.microsoft.com/dotnet/aspire/deployment/overview)
+- 🔨 **Build:** on a branch, add an AppHost modelling your compose stack (Postgres with your Dockerfile, RabbitMQ, Valkey, Keycloak; LGTM or the Aspire dashboard) and the 3 projects; replace your `AddFleetTrackDefaults()` with ServiceDefaults in one service; generate deployment artifacts (`aspire publish` / `azd infra gen`) and diff them against your Bicep/Helm.
+- ✅ **Done when:** your journal has the comparison, and **ADR-016** gives the verdict: what Aspire gave you, what it hid or did differently, and whether FleetTrack adopts it (local dev only, or deployment too). Revisit ADR-001.
+
+### T7 · Break it
+- 🔨 **Build:** (1) deploy a migration that drops a column the *previous* revision still reads, during a 50/50 traffic split or a rolling update. (2) Remove the app identity's access to secrets (Key Vault role / Kubernetes Secret) and see how fast health checks and logs reveal it. **Tear everything down afterwards.**
+- ✅ **Done when:** both failures are recorded and resources are deleted.
+
+---
 
 ## Quiz → [answers](../answers/M13.md)
 1. Container Apps vs AKS vs App Service: when does each win?
@@ -61,10 +63,10 @@ Kubernetes skills are equally marketable, so this path loses nothing for learnin
 10. *Design:* design environments (dev/test/prod), promotion and rollback for a 4-team platform with 20 services.
 
 ## Design drill (20 min)
-"Design the CI/CD and runtime platform for a company moving 30 .NET services from VMs to Azure." Cover IaC, environments, secrets, observability, cost and migration order.
+"Design the CI/CD and runtime platform for a company moving 30 .NET services from VMs to the cloud." Cover IaC, environments, secrets, observability, cost and migration order.
 
 ## Review
 M12 Q6 · M11 Q2 · M09 Q6
 
 ## Exit check
-Deployed from IaC by the OIDC pipeline, a zero-downtime migration proven, the cost doc and teardown done, the Aspire comparison done and ADR-016 written. **Resources torn down.**
+Deployed from IaC by the pipeline, a zero-downtime migration proven, the cost doc and teardown done, the Aspire comparison and ADR-016 written. **Cloud resources torn down.**

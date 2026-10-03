@@ -1,38 +1,43 @@
 # M07 · Workflows, sagas & background work
 
-**Time:** ~8 h · **Prereq:** M06 · **Outcome:** a long-running dispatch process that survives restarts, handles timeouts and compensates, plus correct background processing.
+**Time:** ~9 h · **Prereq:** M06 · **Outcome:** a long-running dispatch process that survives restarts, handles timeouts and compensates, plus correct background processing.
 
-## Why it matters
-Real business processes wait on humans and third parties: driver acceptance, appointment confirmations, payments. "How do you handle a distributed transaction?" is a standard interview question, and the senior answer is a saga, not 2PC.
+**Why it matters:** real business processes wait on humans and third parties. "How do you handle a distributed transaction?" is a standard interview question, and the senior answer is a saga, not 2PC.
 
-## Concepts
-- **Saga:** a sequence of local transactions coordinated by messages, with **compensating actions** instead of rollback.
-- **Orchestration vs choreography:** a central saga/process manager vs modules reacting to each other's events. Visibility vs coupling.
-- **Saga state:** persisted, versioned (optimistic concurrency), correlated by id; idempotent transitions.
-- **Timeouts as events:** scheduled/delayed messages; a timeout is a first-class branch.
-- **Compensation ≠ undo:** it's a new business fact ("assignment released"), and must itself be idempotent.
-- **Background work in .NET:** `BackgroundService`, scoped services inside it, graceful shutdown, `PeriodicTimer`; Wolverine scheduled messages vs Quartz/Hangfire.
+Each task: 📖 **Learn** → 🔨 **Build** → ✅ **Done when**.
 
-Read: [Saga pattern](https://learn.microsoft.com/azure/architecture/patterns/saga) · [Compensating transaction](https://learn.microsoft.com/azure/architecture/patterns/compensating-transaction) · [Wolverine sagas](https://wolverinefx.net/guide/durability/sagas.html) · [Background tasks with hosted services](https://learn.microsoft.com/aspnet/core/fundamentals/host/hosted-services)
+---
 
-## Labs
+### T1 · Design the process first
+- 📖 **Learn (45 min):** sagas as sequences of local transactions with compensations; orchestration vs choreography. [Saga pattern (Azure Architecture Center)](https://learn.microsoft.com/azure/architecture/patterns/saga) · [Saga pattern (microservices.io)](https://microservices.io/patterns/data/saga.html) · [Compensating transaction pattern](https://learn.microsoft.com/azure/architecture/patterns/compensating-transaction)
+- 🔨 **Build:** a sequence diagram: `ShipmentBooked` → Dispatch proposes a vehicle + driver → driver accepts *or* a 15-min timeout fires → escalate to a dispatcher → reassign; after 3 failures, the shipment goes `OnHold` and the customer is notified. List each step's compensation.
+- ✅ **Done when:** `docs/design/dispatch-saga.md` has the diagram, the state table and the compensation table.
 
-- [ ] **L1 · Design the process first.** Sequence diagram: `ShipmentBooked` → Dispatch proposes vehicle + driver → driver accepts *or* 15-minute timeout → escalate to a dispatcher → reassign; after 3 failed attempts → shipment `OnHold` + customer notified. List each step's compensation.
-  ✅ `docs/design/dispatch-saga.md` with the diagram, state table and compensation table.
-- [ ] **L2 · Implement the saga (Wolverine).** Persisted saga state with correlation by shipment id; handlers for `AssignmentProposed`, `DriverAccepted`, `DriverRejected`.
-  ✅ A test: restart the app mid-flow and the saga continues from its persisted state.
-- [ ] **L3 · Timeouts.** Schedule `AcceptanceTimedOut` when proposing; ignore it if acceptance already happened (idempotent).
-  ✅ Tests with a fake clock/scheduler: the timeout path escalates; a late acceptance after the timeout is handled deterministically (decide and document which wins).
-- [ ] **L4 · Compensation.** If the shipment is cancelled mid-flow: release the vehicle reservation and notify the driver. Compensations are idempotent.
-  ✅ A test cancels at each state and checks that no reservation is left behind; duplicate cancellation is harmless.
-- [ ] **L5 · Background job done right.** A nightly "stale draft cleanup" as a `BackgroundService` with `PeriodicTimer`, a scope per run, cancellation on shutdown, and a single-runner guarantee across instances (Postgres advisory lock).
-  ✅ With two app instances running, the job executes once; stopping the app during a run exits cleanly within the shutdown timeout.
+### T2 · Implement the saga
+- 📖 **Learn (40 min):** [Wolverine sagas](https://wolverinefx.net/guide/durability/sagas.html) · [Optimistic concurrency for saga state](https://wolverinefx.net/guide/durability/sagas.html#concurrency)
+- 🔨 **Build:** persisted saga state correlated by shipment id, with handlers for `AssignmentProposed`, `DriverAccepted` and `DriverRejected`.
+- ✅ **Done when:** a test restarts the app mid-flow and the saga continues from its persisted state.
 
-## Break it
-Remove optimistic concurrency from saga state and deliver `DriverAccepted` and `AcceptanceTimedOut` at the same moment (parallel test). Observe the inconsistent state, then restore concurrency and show the retry resolving it.
+### T3 · Timeouts
+- 📖 **Learn (20 min):** [Wolverine: scheduled messages & saga timeouts](https://wolverinefx.net/guide/messaging/message-bus.html#scheduling-message-delivery-or-execution)
+- 🔨 **Build:** schedule `AcceptanceTimedOut` when proposing, and ignore it if acceptance already happened.
+- ✅ **Done when:** tests with a fake clock/scheduler show the timeout path escalating, and a late acceptance is handled deterministically (decide and document which wins).
 
-## Decide
-Add a section to ADR-009 (or a new short ADR): orchestration vs choreography for dispatch, and why.
+### T4 · Compensation
+- 📖 **Learn (15 min):** reread the compensating transaction pattern from T1, focusing on idempotency.
+- 🔨 **Build:** a cancellation mid-flow releases the vehicle reservation and notifies the driver; compensations are idempotent.
+- ✅ **Done when:** a test cancels at each state and finds no reservation left behind; a duplicate cancellation is harmless.
+
+### T5 · A background job done right
+- 📖 **Learn (40 min):** [Background tasks with hosted services](https://learn.microsoft.com/aspnet/core/fundamentals/host/hosted-services) (scoped services inside them, shutdown) · [PeriodicTimer](https://learn.microsoft.com/dotnet/api/system.threading.periodictimer) · [Postgres advisory locks](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)
+- 🔨 **Build:** a nightly "stale draft cleanup" `BackgroundService` with `PeriodicTimer`, a scope per run, cancellation on shutdown, and a single runner across instances via `pg_try_advisory_lock`.
+- ✅ **Done when:** with two app instances running, the job executes once; stopping the app mid-run exits cleanly within the shutdown timeout.
+
+### T6 · Break it & record the decision
+- 🔨 **Build:** remove optimistic concurrency from the saga state and deliver `DriverAccepted` and `AcceptanceTimedOut` at the same moment (a parallel test); observe the inconsistent state, then restore concurrency. Add a section to ADR-009 (or a short new ADR): orchestration vs choreography for dispatch, and why.
+- ✅ **Done when:** the race is documented and the decision is recorded.
+
+---
 
 ## Quiz → [answers](../answers/M07.md)
 1. Why not use a distributed transaction (2PC) across modules/services?

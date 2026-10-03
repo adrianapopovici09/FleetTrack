@@ -9,9 +9,9 @@ The system evolves the way real systems do: **layered API → modular monolith �
 | | |
 | --- | --- |
 | [**Plan & tracker**](docs/plans/plan.md) | 17 modules (~26 weeks at ~8 h/week), architecture path, technology choices, ADR register |
-| [**Modules**](docs/plans/modules/) | Per module: concepts, hands-on labs with acceptance checks, a "break it" exercise, ADRs, quiz, design drill |
+| [**Modules**](docs/plans/modules/) | Per module: ordered tasks, each with what to read 📖, what to build 🔨 and a done-check ✅; then a quiz, a design drill and review questions |
 | [**Answer keys**](docs/plans/answers/) | Model answers for every quiz (don't peek first) |
-| [**CLAUDE.md**](CLAUDE.md) | How Claude acts as a tutor: `quiz M03`, `drill M08`, `review M06-L2`, `status` |
+| [**CLAUDE.md**](CLAUDE.md) | How Claude acts as a tutor: `quiz M03`, `drill M08`, `review M06-T2`, `status` |
 
 ## Architecture (target)
 
@@ -42,7 +42,7 @@ The system evolves the way real systems do: **layered API → modular monolith �
 ## Quick start
 
 ```powershell
-docker compose -f deploy/compose.yaml up -d   # local dependencies (from M00-L4)
+docker compose -f deploy/compose.yaml up -d   # local dependencies (from M00-T4)
 dotnet build .\FleetTrack.slnx
 dotnet test  .\FleetTrack.slnx
 dotnet run   --project .\src\FleetTrack.API

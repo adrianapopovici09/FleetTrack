@@ -15,25 +15,28 @@
 | | |
 | --- | --- |
 | **Current module** | [M00 · Foundations & guardrails](modules/M00-foundations.md) |
-| **Done** | M00-L1 SDK pinning + Central Package Management · M00-L2 layered skeleton (`src/` Domain / Application / Infrastructure / API) |
-| **▶ Next task** | **[M00-L3 · Build guardrails](modules/M00-foundations.md#labs)**: create `Directory.Build.props` (nullable, warnings-as-errors, analyzers) and `.editorconfig`, add the missing `app.Run()` to `src/FleetTrack.API/Program.cs`, then fix every warning. ✅ `dotnet build` with 0 warnings and `dotnet format --verify-no-changes` passes. |
-| **Then** | M00-L4 docker compose (Postgres) → L5 config + health checks by hand → L6 test harness → L7 CI |
-| **Known loose ends** | `Program.cs` has a temporary hand-written `/health` endpoint (replaced in L5) · the test project is still named `FleetTrack.PublicAPI.UnitTests` (renamed in L6) · ADR-002/003 need finishing (M00 "Decide") |
+| **Done** | M00-T1 SDK pinning + Central Package Management · M00-T2 layered skeleton (`src/` Domain / Application / Infrastructure / API) |
+| **▶ Next task** | **[M00-T3 · Build guardrails](modules/M00-foundations.md)**: read the 4 linked pages in the task (~30 min), then create `Directory.Build.props` (nullable, warnings-as-errors, analyzers) and `.editorconfig`, add the missing `app.Run()` to `src/FleetTrack.API/Program.cs`, then fix every warning. ✅ `dotnet build` with 0 warnings and `dotnet format --verify-no-changes` passes. |
+| **Then** | M00-T4 docker compose (Postgres) → T5 config + health checks by hand → T6 test harness → T7 CI → T8 break it → T9 ADRs |
+| **Known loose ends** | `Program.cs` has a temporary hand-written `/health` endpoint (replaced in T5) · the test project is still named `FleetTrack.PublicAPI.UnitTests` (renamed in T6) · ADR-002/003 need finishing (T9) |
 | **Last session** | 2026-10-03: replaced the old plan with this one; removed the Aspire AppHost (Aspire is deferred to M13) |
 
 ---
 
 ## 1. How each module works
 
-Every module in [`modules/`](modules/) has the same shape:
+Every module in [`modules/`](modules/) is a numbered list of **tasks** (T1, T2, …), done in order. Each task is one or two sessions and carries everything it needs:
+
+| Part of a task | What it contains |
+| --- | --- |
+| 📖 **Learn** | The concept in a sentence or two, plus the specific pages to read (often a named section), with a time estimate. Read before building. |
+| 🔨 **Build** | What to implement in FleetTrack |
+| ✅ **Done when** | An objective check. The task is done only when it passes. |
+
+The last tasks of each module are always **Break it** (cause the failure the module protects against, on purpose) and **Decide** (write the module's ADRs in [`../decisions/`](../decisions/)). Then, at the end of the module:
 
 | Part | What you do | Time |
 | --- | --- | --- |
-| **Why it matters** | Which real work requests and interview questions this covers | 2 min |
-| **Concepts** | Short primer + 2–4 primary sources. Read before coding. | 30–60 min |
-| **Labs** | 3–6 hands-on tasks in FleetTrack, each with a ✅ acceptance check. A lab is done only when the check passes. | 60–120 min each |
-| **Break it** | Deliberately cause the failure the module protects against, and watch it happen | 30 min |
-| **Decide** | Write the ADR(s) for the module's decisions in [`../decisions/`](../decisions/) | 30 min |
 | **Quiz** | 10 questions: concept, scenario, code-reading, design. Answer **without looking**, then check [`answers/`](answers/) or ask Claude to grade you. | 30 min |
 | **Design drill** | One system-design interview question, answered out loud, 20 min timed | 20 min |
 | **Review** | 3 questions from earlier modules (spaced repetition) | 10 min |
@@ -46,7 +49,7 @@ Every module in [`modules/`](modules/) has the same shape:
 3. **Numbers, not adjectives.** Performance, throughput and cost claims need a measurement in `docs/perf/`.
 4. **Explain to learn.** After each module, write `docs/journal/Mxx.md` with three things you learned, one surprise and one open question. This becomes your interview material.
 5. **Use Claude as a tutor, not a code generator.** The rules are in [`CLAUDE.md`](../../CLAUDE.md): hints before solutions, quizzes graded one question at a time, code reviewed against the acceptance checks.
-6. **Timebox.** If a lab passes 3 h, ship the smallest version that meets ✅, write the rest down as a follow-up and move on.
+6. **Timebox.** If a task passes 3 h, ship the smallest version that meets ✅, write the rest down as a follow-up and move on.
 
 ---
 
@@ -175,6 +178,6 @@ Write ADRs in [`../decisions/`](../decisions/) with the [template](../decisions/
 
 ## 6. Repository conventions
 
-- **Branch per lab:** `m03/lab2-keyset-paging`; commit messages start with the lab id (`M03-L2: keyset paging`).
+- **Branch per task:** `m03/t3-keyset-paging`; commit messages start with the task id (`M02-T3: keyset paging`).
 - **Where things go:** `docs/decisions/` ADRs · `docs/design/` design-drill write-ups · `docs/perf/` measurements · `docs/journal/` learning log · `docs/architecture/` diagrams · `labs/` throwaway katas (M01) · `deploy/` compose + Bicep.
-- **Dependency rule** (until M05, then per module): `API → Application → Domain`, `Infrastructure → Application`; nothing references Infrastructure except the composition root. From M00-L5 onward this is enforced by tests.
+- **Dependency rule** (until M05, then per module): `API → Application → Domain`, `Infrastructure → Application`; nothing references Infrastructure except the composition root. From M00-T6 onward this is enforced by tests.

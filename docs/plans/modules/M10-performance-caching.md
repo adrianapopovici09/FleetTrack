@@ -1,42 +1,48 @@
 # M10 · Performance & caching
 
-**Time:** ~12 h · **Prereq:** M09 · **Outcome:** a repeatable method (measure → hypothesise → change → re-measure), correct caching, load-test results and SLOs you can defend.
+**Time:** ~13 h · **Prereq:** M09 · **Outcome:** a repeatable method (measure → hypothesise → change → re-measure), correct caching, load-test results and SLOs you can defend.
 
-## Why it matters
-"The system is slow, what do you do?" is asked in nearly every senior interview, and at work the answer has to come with evidence. Caching is the most common fix and the most common source of subtle bugs.
+**Why it matters:** "the system is slow, what do you do?" is asked in nearly every senior interview, and at work the answer has to come with evidence. Caching is the most common fix and the most common source of subtle bugs.
 
-## Concepts
-- **Method:** define the target (SLO) → reproduce under load → profile → fix one thing → re-measure → record.
-- **Tools:** BenchmarkDotNet (micro), `dotnet-counters` / `dotnet-trace` / `dotnet-gcdump` (runtime), `EXPLAIN ANALYZE` (SQL), **k6** (system load).
-- **Latency:** p50/p95/p99, tail latency, coordinated omission, Little's law, connection-pool and thread-pool limits.
-- **Caching layers:** HTTP (`Cache-Control`, ETag, output cache) → in-process (L1) → distributed (Valkey/Redis, L2). **HybridCache** combines L1 + L2 with stampede protection and tag-based invalidation.
-- **Cache correctness:** keys include tenant + version; TTL + jitter; invalidation by tag/version vs delete; stampede (thundering herd); never cache per-user data in shared caches without the user in the key.
-- **Capacity maths:** requests/s × cost per request → instances, DB connections, cost.
+Each task: 📖 **Learn** → 🔨 **Build** → ✅ **Done when**.
 
-Read: [Performance best practices (ASP.NET Core)](https://learn.microsoft.com/aspnet/core/fundamentals/best-practices) · [HybridCache](https://learn.microsoft.com/aspnet/core/performance/caching/hybrid) · [Output caching](https://learn.microsoft.com/aspnet/core/performance/caching/output) · [dotnet-trace](https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-trace) · [k6 docs](https://grafana.com/docs/k6/latest/)
+---
 
-## Labs
+### T1 · Baseline load test
+- 📖 **Learn (45 min):** percentiles, coordinated omission, open vs closed load models. [k6: scenarios & executors](https://grafana.com/docs/k6/latest/using-k6/scenarios/) · [k6: open and closed models](https://grafana.com/docs/k6/latest/using-k6/scenarios/concepts/open-vs-closed/) · [Little's law (explained)](https://en.wikipedia.org/wiki/Little%27s_law)
+- 🔨 **Build:** k6 scenarios through the gateway: shipment list (70%), details with last position (20%), booking (10%), ramping to the failure point with an arrival-rate executor.
+- ✅ **Done when:** `docs/perf/M10-baseline.md` records RPS at the knee, p95/p99, error rate, and the first resource that saturated.
 
-- [ ] **L1 · Baseline load test.** k6 scenarios through the gateway: shipment list (70%), shipment details with last position (20%), booking (10%), ramping to the failure point.
-  ✅ `docs/perf/M10-baseline.md`: RPS at the knee, p95/p99, error rate, and the first resource that saturated (CPU, DB connections, thread pool…).
-- [ ] **L2 · Profile and fix the top hotspot.** Use `dotnet-trace` + flame graph (PerfView or speedscope) and `dotnet-counters` during the load; find the top 2 issues (allocations, sync I/O, chatty SQL, serialisation) and fix them one at a time.
-  ✅ A before/after table for each fix; a rejected hypothesis is written down too.
-- [ ] **L3 · Manual cache-aside first.** Cache the shipment details with `IDistributedCache` + Valkey (add `valkey/valkey` to compose; it speaks the Redis protocol, so you use the normal StackExchange.Redis-based packages) by hand: key design (`tenant:{t}:shipment:{id}:v{n}`), TTL with jitter, invalidation on update via the domain event.
-  ✅ A test proves updates are visible immediately after the write (no stale read) and another tenant can never get the cached entry.
-- [ ] **L4 · HybridCache.** Replace L3 with `HybridCache` (L1 + Valkey L2), tag-based invalidation (`shipment:{id}`, `tenant:{t}`). Simulate a stampede (500 concurrent misses on one key) with and without it.
-  ✅ Measured DB hits during the stampede: hand-rolled vs HybridCache.
-- [ ] **L5 · HTTP-level caching.** Output caching for the public tracking page (vary by tracking number; evict by tag on status change); `ETag`/304 for shipment GETs (reuse M02).
-  ✅ k6 re-run with numbers vs the baseline.
-- [ ] **L6 · SLOs & capacity.** Define SLOs (e.g. shipment list p95 < 200 ms, 99.9% success); compute the capacity for 10× today's tenants (instances, DB connections, Valkey memory).
-  ✅ `docs/perf/slo.md` with the SLOs, capacity maths and the next bottleneck you predict.
+### T2 · Profile and fix the top hotspots
+- 📖 **Learn (60 min):** [ASP.NET Core performance best practices](https://learn.microsoft.com/aspnet/core/fundamentals/best-practices) · [dotnet-trace](https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-trace) · [dotnet-counters](https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-counters) · [Viewing traces in speedscope / PerfView](https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-trace#view-the-trace-captured-from-dotnet-trace)
+- 🔨 **Build:** profile under load with `dotnet-trace` (flame graph) + `dotnet-counters`; find the top 2 issues (allocations, sync I/O, chatty SQL, serialisation) and fix them one at a time.
+- ✅ **Done when:** each fix has a before/after table, and rejected hypotheses are written down too.
 
-## Break it
-1. Forget the tenant in the cache key and show a cross-tenant leak in a test.
-2. Cache with a fixed TTL and no jitter for 10,000 keys populated at once, then watch them expire together (synchronized misses).
-3. Run k6 with a fixed request rate vs fixed virtual users (VUs) while the server slows down, and see coordinated omission hide the real latency.
+### T3 · Manual cache-aside first
+- 📖 **Learn (40 min):** [Cache-aside pattern](https://learn.microsoft.com/azure/architecture/patterns/cache-aside) · [Distributed caching in ASP.NET Core](https://learn.microsoft.com/aspnet/core/performance/caching/distributed) · [Valkey](https://valkey.io/) (Redis-protocol compatible, BSD licence)
+- 🔨 **Build:** add `valkey/valkey` to compose. Cache shipment details with `IDistributedCache` (the StackExchange.Redis provider works with Valkey) by hand: key design (`tenant:{t}:shipment:{id}:v{n}`), TTL with jitter, invalidation on update via the domain event.
+- ✅ **Done when:** tests prove updates are visible immediately after a write and another tenant can never read the cached entry.
 
-## Decide
-**ADR-013** Caching strategy: what's cached where, key rules, invalidation, what's never cached.
+### T4 · HybridCache & stampede protection
+- 📖 **Learn (30 min):** [HybridCache library](https://learn.microsoft.com/aspnet/core/performance/caching/hybrid) (read "Stampede protection" and "Tags")
+- 🔨 **Build:** replace T3 with `HybridCache` (L1 + Valkey L2) and tag-based invalidation (`shipment:{id}`, `tenant:{t}`); simulate 500 concurrent misses on one key with and without it.
+- ✅ **Done when:** DB hits during the stampede are measured: hand-rolled vs HybridCache.
+
+### T5 · HTTP-level caching
+- 📖 **Learn (30 min):** [Output caching middleware](https://learn.microsoft.com/aspnet/core/performance/caching/output) · [MDN: HTTP caching](https://developer.mozilla.org/docs/Web/HTTP/Guides/Caching)
+- 🔨 **Build:** output caching for the public tracking page (vary by tracking number, evict by tag on status change); `ETag`/304 for shipment GETs (reusing M02).
+- ✅ **Done when:** a k6 rerun is compared with the baseline.
+
+### T6 · SLOs & capacity maths
+- 📖 **Learn (40 min):** [Google SRE: Service Level Objectives](https://sre.google/sre-book/service-level-objectives/) · [Azure: performance testing & capacity planning](https://learn.microsoft.com/azure/well-architected/performance-efficiency/capacity-planning)
+- 🔨 **Build:** define SLOs (e.g. shipment list p95 < 200 ms, 99.9% success) and compute capacity for 10× tenants (instances, DB connections, Valkey memory).
+- ✅ **Done when:** `docs/perf/slo.md` has the SLOs, the capacity maths and the next bottleneck you predict.
+
+### T7 · Break it & decide
+- 🔨 **Build:** (1) forget the tenant in the cache key and show the leak in a test. (2) Populate 10,000 keys with a fixed TTL and no jitter, and watch them expire together. (3) Compare k6 fixed-VU vs arrival-rate results while the server slows (coordinated omission). Then write **ADR-013**: caching strategy (what's cached where, key rules, invalidation, what's never cached).
+- ✅ **Done when:** the three failures are recorded and ADR-013 is written.
+
+---
 
 ## Quiz → [answers](../answers/M10.md)
 1. Why are p99 and p95 more important than average latency? What's coordinated omission?
@@ -57,4 +63,4 @@ Read: [Performance best practices (ASP.NET Core)](https://learn.microsoft.com/as
 M08 Q4 · M03 Q10 · M01 Q10
 
 ## Exit check
-Baseline + 2 profiled fixes with numbers, caching tests (staleness, tenant isolation), stampede comparison, and SLO + capacity doc. ADR-013 written.
+Baseline + 2 profiled fixes with numbers, caching tests (staleness, tenant isolation), the stampede comparison, the SLO + capacity doc, and ADR-013.

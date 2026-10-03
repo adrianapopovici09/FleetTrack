@@ -1,36 +1,38 @@
 # M16 · Frontend slice *(optional)*
 
-**Time:** ~12 h · **Prereq:** M11 (OIDC) · **Outcome:** a small but well-architected ops console (shipment list, details, live map) proving you can design the client side of a system and test a full user journey.
+**Time:** ~13 h · **Prereq:** M11 (OIDC) · **Outcome:** a small but well-architected ops console (shipment list, details, live map) proving you can design the client side of a system and test a full user journey.
 
-## Why it matters
-Backend-focused senior roles still expect you to design APIs *for* clients, understand auth flows in the browser, and reason about client state. Skip this module if your target roles are purely backend; do it if you want a demoable UI or full-stack roles.
+**Why it matters:** backend-focused senior roles still expect you to design APIs *for* clients, understand browser auth flows and reason about client state. Skip this module for purely backend roles; do it for a demoable UI or full-stack roles.
 
-## Concepts
-- **Rendering model:** SPA vs SSR vs hybrid; why an internal ops console is a SPA.
-- **BFF pattern:** keeping tokens out of the browser (YARP as BFF) vs PKCE in the SPA.
-- **Server state vs UI state:** TanStack Query (cache, invalidation, retries, optimistic updates) vs local component state; no global store for server data.
-- **Typed contracts:** generate the TS client from OpenAPI; one ProblemDetails → UI error mapper.
-- **Real-time UX:** reconnect, resubscribe, backfill, showing freshness.
-- **Testing:** component tests vs Playwright E2E against the real stack.
+Each task: 📖 **Learn** → 🔨 **Build** → ✅ **Done when**.
 
-Read: [React docs](https://react.dev/learn) · [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview) · [BFF pattern](https://learn.microsoft.com/azure/architecture/patterns/backends-for-frontends) · [Playwright](https://playwright.dev/docs/intro) · [SignalR JS client](https://learn.microsoft.com/aspnet/core/signalr/javascript-client)
+---
 
-## Labs
+### T1 · Scaffold, auth & a typed client
+- 📖 **Learn (90 min):** [React: Quick start](https://react.dev/learn) · [Vite: getting started](https://vite.dev/guide/) · [OAuth 2.0 for browser-based apps (IETF draft)](https://datatracker.ietf.org/doc/draft-ietf-oauth-browser-based-apps/) (read the BFF vs token-in-browser sections) · [Backends for Frontends pattern](https://learn.microsoft.com/azure/architecture/patterns/backends-for-frontends) · [oidc-client-ts](https://github.com/authts/oidc-client-ts) · [openapi-typescript + openapi-fetch](https://openapi-ts.dev/)
+- 🔨 **Build:** `web/` with Vite + React + TS; login via Keycloak (PKCE in the SPA, *or* the gateway as BFF with cookies: pick one and justify it); a typed client generated from OpenAPI.
+- ✅ **Done when:** you can log in and call an authenticated endpoint, a 401 triggers re-login, and ProblemDetails errors show as readable messages.
 
-- [ ] **L1 · Scaffold + auth.** `web/` with Vite + React + TS; login via Keycloak (PKCE with `oidc-client-ts`, *or* the gateway as BFF with cookies; pick one and justify it); a typed API client generated from OpenAPI (`openapi-typescript` + `openapi-fetch`, or Kiota).
-  ✅ Log in, call an authenticated endpoint; a 401 triggers re-login; ProblemDetails errors show as readable messages.
-- [ ] **L2 · Shipment list & details.** Keyset paging + filters reflected in the URL; TanStack Query with sensible cache keys; booking a shipment invalidates the list; optimistic status change with rollback on 409/412.
-  ✅ Reloading the page restores the view from the URL; a concurrent edit shows the 412 message and refreshes.
-- [ ] **L3 · Live map.** MapLibre + the SignalR client through the gateway: vehicles move, the trail is drawn, geofences are shown; reconnect + backfill the last positions after a drop; a "last updated N s ago" indicator.
-  ✅ Kill and restart the Tracking service → the map recovers without a page reload.
-- [ ] **L4 · E2E.** Playwright against the compose stack in CI: log in → book shipment → see it in the list → start the simulator → see it move on the map.
-  ✅ A green E2E job in CI with a trace artifact on failure.
+### T2 · Shipment list & details with server state
+- 📖 **Learn (60 min):** server state vs UI state. [TanStack Query overview](https://tanstack.com/query/latest/docs/framework/react/overview) · [Query invalidation](https://tanstack.com/query/latest/docs/framework/react/guides/query-invalidation) · [Optimistic updates](https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates) · [React Router](https://reactrouter.com/start/framework/installation)
+- 🔨 **Build:** keyset paging + filters reflected in the URL; sensible cache keys; booking invalidates the list; optimistic status change with rollback on 409/412.
+- ✅ **Done when:** reloading restores the view from the URL, and a concurrent edit shows the 412 message and refreshes.
 
-## Break it
-Store the access token in `localStorage` and demonstrate how one XSS-injected script could read it. Then explain what the BFF approach changes.
+### T3 · Live map
+- 📖 **Learn (45 min):** [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/) · [OpenFreeMap](https://openfreemap.org/) (free tiles, no key) · [SignalR JS client: reconnect](https://learn.microsoft.com/aspnet/core/signalr/javascript-client#reconnect-clients)
+- 🔨 **Build:** MapLibre + the SignalR client through the gateway: moving vehicles, trails and geofences; reconnect + backfill of the last positions after a drop; a "last updated N s ago" indicator.
+- ✅ **Done when:** killing and restarting Tracking lets the map recover without a page reload.
 
-## Decide
-A short ADR (append to the register as ADR-021): SPA + PKCE vs BFF, and the React vs Blazor choice.
+### T4 · End-to-end tests
+- 📖 **Learn (45 min):** [Playwright: getting started](https://playwright.dev/docs/intro) · [Playwright: authentication](https://playwright.dev/docs/auth) · [Playwright in CI](https://playwright.dev/docs/ci-intro)
+- 🔨 **Build:** Playwright against the compose stack in CI: log in → book a shipment → see it in the list → start the simulator → see it move on the map.
+- ✅ **Done when:** the E2E job is green in CI, with a trace artifact on failure.
+
+### T5 · Break it & decide
+- 🔨 **Build:** store the access token in `localStorage` and show how one injected script could read it, then explain what the BFF approach changes. Write a short ADR (ADR-021): SPA + PKCE vs BFF, React vs Blazor.
+- ✅ **Done when:** the demo note and the ADR are written.
+
+---
 
 ## Quiz → [answers](../answers/M16.md)
 1. Why shouldn't server data live in a global client store like Redux?

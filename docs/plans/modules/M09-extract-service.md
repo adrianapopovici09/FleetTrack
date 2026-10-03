@@ -1,49 +1,54 @@
 # M09 · From modules to services
 
-**Time:** ~16 h · **Prereq:** M08 · **Outcome:** Tracking runs as its own service with its own database, behind a gateway, integrated by messages. You've experienced, measured and documented what the split costs and buys.
+**Time:** ~17 h · **Prereq:** M08 · **Outcome:** Tracking runs as its own service with its own database, behind a gateway, integrated by messages. You've experienced, measured and documented what the split costs and buys.
 
-## Why it matters
-Most senior and architect roles involve distributed systems: designing them, operating them, or untangling them. Interviewers want to hear *when* you'd split, *how* you'd do it safely, and *what breaks*. After this module you can answer from experience, not slides.
+**Why it matters:** most senior and architect roles involve distributed systems. Interviewers want to hear *when* you'd split, *how* you'd do it safely, and *what breaks*. After this module you answer from experience, not slides.
 
-## Concepts
-- **When to split** (your ADR-008 triggers): independent scaling, failure isolation, team ownership, release cadence, different technology/storage needs. "Clean code" is not a trigger.
-- **Data ownership:** database-per-service; no shared tables; replicating needed data via events (**event-carried state transfer**) vs querying the owner.
-- **Data migration while live:** dual writes vs change data capture vs backfill + event replay; cutover and rollback.
-- **Sync vs async:** a synchronous call couples availability (A calls B → A's uptime ≤ B's uptime); prefer events; when you need sync, use gRPC with deadlines + resilience.
-- **Gateway:** YARP routes, path rewrites, header propagation, keeping a stable public API while internals move.
-- **Distributed failure modes:** partial failure, timeouts vs slow responses, retry storms, cascading failure, version skew between services.
-- **Contract testing:** consumer-driven contracts (Pact) or schema/snapshot checks on messages and gRPC protos.
-- **The "distributed monolith" smell:** services that must deploy together or call each other in chains.
+Each task: 📖 **Learn** → 🔨 **Build** → ✅ **Done when**.
 
-Read: [Monolith to microservices, data patterns](https://learn.microsoft.com/azure/architecture/microservices/design/data-considerations) · [Strangler fig](https://learn.microsoft.com/azure/architecture/patterns/strangler-fig) · [YARP](https://learn.microsoft.com/aspnet/core/fundamentals/servers/yarp/yarp-overview) · [Microservices trade-offs (Fowler)](https://martinfowler.com/articles/microservice-trade-offs.html) · [Pact](https://docs.pact.io/)
+---
 
-## Labs
+### T1 · Justify and plan the split
+- 📖 **Learn (60 min):** legitimate triggers vs fashion; the distributed-monolith trap. [Microservice trade-offs (Fowler)](https://martinfowler.com/articles/microservice-trade-offs.html) · [Microservice prerequisites (Fowler)](https://martinfowler.com/bliki/MicroservicePrerequisites.html) · [How to break a monolith into microservices (Dehghani)](https://martinfowler.com/articles/break-monolith-into-microservices.html)
+- 🔨 **Build:** apply ADR-008's triggers to every module. Write the Tracking extraction plan: what moves (code, schema, consumers), what stays, what data Tracking needs from Shipments and how it gets it, cutover steps and rollback.
+- ✅ **Done when:** **ADR-012** is written *before* any code moves, including why *not* to extract Dispatch or Billing.
 
-- [ ] **L1 · Justify and plan the split.** Apply ADR-008's triggers to every module. Write the extraction plan for Tracking: what moves (code, schema, consumers), what stays, which data Tracking needs from Shipments and how it gets it, the cutover steps and the rollback.
-  ✅ **ADR-012** written *before* any code moves, including the reasons *not* to extract Dispatch or Billing.
-- [ ] **L2 · New service, new database.** `src/Services/FleetTrack.Tracking.Service` (its own host, `AddFleetTrackDefaults()`, health, Wolverine) with its own Postgres database (`tracking`) in compose. Move the Tracking module code; the monolith no longer references it. The device simulator now targets the service.
-  ✅ Both apps run in compose; the monolith's architecture tests prove no reference to Tracking remains; Tracking's tests run independently.
-- [ ] **L3 · Data: replicate, don't share.** Tracking needs shipment destination + tenant for geofence → shipment matching. Consume `ShipmentBooked`/`ShipmentRerouted` into a local read table (event-carried state transfer). Write a one-off backfill for existing shipments (replay or export/import).
-  ✅ Tracking matches arrivals with Shipments stopped. Backfill + live events produce the same data as a fresh replay (test).
-- [ ] **L4 · Gateway.** `src/FleetTrack.Gateway` with **YARP**: `/api/v1/tracking/*` → Tracking service, everything else → monolith, plus SignalR/WebSocket proxying. Clients only know the gateway.
-  ✅ The browser live map and the existing API tests work through the gateway unchanged.
-- [ ] **L5 · One justified synchronous call.** The shipment details page needs "last known position" live: the monolith calls Tracking over **gRPC** with a 300 ms deadline, standard resilience handler, and a fallback ("position unavailable").
-  ✅ Stopping the Tracking container: the shipment page still works, with a degraded field. Latency recorded with and without the call.
-- [ ] **L6 · Contracts across deployables.** Move shared message contracts into a versioned `FleetTrack.Contracts` package (local NuGet feed or project reference + snapshot tests). Add a contract test that fails when the producer changes a message incompatibly.
-  ✅ Changing a field type in `ShipmentBooked` breaks the contract test before anything is deployed.
+### T2 · New service, new database
+- 📖 **Learn (30 min):** [Database-per-service](https://microservices.io/patterns/data/database-per-service.html) · [Data considerations for microservices](https://learn.microsoft.com/azure/architecture/microservices/design/data-considerations)
+- 🔨 **Build:** `src/Services/FleetTrack.Tracking.Service` (its own host, `AddFleetTrackDefaults()`, health, Wolverine) with its own `tracking` database in compose. Move the Tracking module code; the monolith no longer references it; the simulator now targets the service.
+- ✅ **Done when:** both apps run in compose, the monolith's architecture tests prove no Tracking reference remains, and Tracking's tests run independently.
 
-## Break it
-1. **Chain of sync calls:** temporarily make booking call Tracking synchronously, which calls back to Shipments. Stop Tracking and watch booking fail. Note: this is the distributed monolith.
-2. **Retry storm:** set aggressive retries (5×, no jitter) on the gRPC call, slow Tracking down to 2 s, run k6, and watch the load multiply.
-3. **Version skew:** deploy an old Tracking against a new message version and see what your tolerant reader does.
+### T3 · Replicate data, don't share it
+- 📖 **Learn (30 min):** [Event-carried state transfer (Fowler, "What do you mean by event-driven?")](https://martinfowler.com/articles/201701-event-driven.html) · [Materialized view pattern](https://learn.microsoft.com/azure/architecture/patterns/materialized-view)
+- 🔨 **Build:** Tracking consumes `ShipmentBooked` / `ShipmentRerouted` into a local read table (destination + tenant), plus a one-off backfill for existing shipments.
+- ✅ **Done when:** Tracking matches arrivals with Shipments stopped, and backfill + live events equal a fresh replay (test).
 
-## Decide
-**ADR-012** Extracting Tracking: triggers met, data ownership, integration style (events + one gRPC call), gateway, migration and rollback. Update **ADR-003** with the hybrid architecture.
+### T4 · Gateway with YARP
+- 📖 **Learn (45 min):** [YARP overview](https://learn.microsoft.com/aspnet/core/fundamentals/servers/yarp/yarp-overview) · [YARP configuration files](https://learn.microsoft.com/aspnet/core/fundamentals/servers/yarp/config-files) · [Gateway routing pattern](https://learn.microsoft.com/azure/architecture/patterns/gateway-routing) · [WebSockets through YARP](https://learn.microsoft.com/aspnet/core/fundamentals/servers/yarp/websockets)
+- 🔨 **Build:** `src/FleetTrack.Gateway`: `/api/v1/tracking/*` → Tracking, everything else → monolith, including SignalR/WebSocket proxying. Clients only know the gateway.
+- ✅ **Done when:** the live map and the existing API tests work through the gateway unchanged.
+
+### T5 · One justified synchronous call
+- 📖 **Learn (45 min):** sync calls couple availability. [gRPC client factory](https://learn.microsoft.com/aspnet/core/grpc/clientfactory) · [Build resilient HTTP apps (standard resilience handler)](https://learn.microsoft.com/dotnet/core/resilience/http-resilience) · [Circuit breaker pattern](https://learn.microsoft.com/azure/architecture/patterns/circuit-breaker)
+- 🔨 **Build:** the shipment page needs the live "last known position": the monolith calls Tracking over gRPC with a 300 ms deadline, the standard resilience handler, and a fallback ("position unavailable").
+- ✅ **Done when:** with Tracking stopped, the shipment page still works with a degraded field; latency is recorded with and without the call.
+
+### T6 · Contracts across deployables
+- 📖 **Learn (30 min):** [Consumer-driven contracts (Fowler)](https://martinfowler.com/articles/consumerDrivenContracts.html) · [Pact .NET](https://github.com/pact-foundation/pact-net)
+- 🔨 **Build:** move shared message contracts into a versioned `FleetTrack.Contracts` package (local NuGet feed, or a project reference + snapshot tests), plus a contract test that fails on an incompatible producer change.
+- ✅ **Done when:** changing a field type in `ShipmentBooked` breaks the contract test before anything is deployed.
+
+### T7 · Break it
+- 📖 **Learn (15 min):** [Retry storm antipattern](https://learn.microsoft.com/azure/architecture/antipatterns/retry-storm/)
+- 🔨 **Build:** (1) a sync call chain booking → Tracking → Shipments, then stop Tracking. (2) Aggressive retries (5×, no jitter) with Tracking slowed to 2 s under k6. (3) An old Tracking version receiving a new message version.
+- ✅ **Done when:** each failure is recorded with what you observed; update ADR-012 and ADR-003 with the costs you saw.
+
+---
 
 ## Quiz → [answers](../answers/M09.md)
 1. Name four legitimate triggers for extracting a service and two bad reasons that teams often use.
 2. Why database-per-service? What do you lose compared with one shared database?
-3. Event-carried state transfer vs querying the owning service: trade-offs (freshness, availability, coupling, storage)?
+3. Event-carried state transfer vs querying the owning service: trade-offs?
 4. Service A's uptime is 99.9%, and it synchronously depends on B (99.9%) and C (99.9%). What's A's best-case availability, and what does that tell you?
 5. What is a distributed monolith, and what are its symptoms?
 6. How do you migrate data out of a shared database without downtime? Outline the steps.
@@ -53,7 +58,7 @@ Read: [Monolith to microservices, data patterns](https://learn.microsoft.com/azu
 10. *Design:* your company has 40 microservices, deploys are coordinated in a monthly "release train", and incidents span 6 services. Diagnose and propose a plan.
 
 ## Design drill (20 min)
-"We want to split our e-commerce monolith into microservices. Which service do you extract first and how, step by step?" (Pick by triggers, strangler via gateway, data migration, rollback, measure.)
+"We want to split our e-commerce monolith into microservices. Which service do you extract first and how, step by step?"
 
 ## Review
 M05 Q8 · M06 Q1 · M07 Q1

@@ -1,42 +1,53 @@
 # M08 · Real-time telemetry
 
-**Time:** ~16 h · **Prereq:** M07 (M01-L3 parser) · **Outcome:** a Tracking module that ingests device telemetry over gRPC at a measured rate, stores it efficiently, detects geofence events and pushes live positions to clients.
+**Time:** ~17 h · **Prereq:** M07 (and the M01-T4 parser) · **Outcome:** a Tracking module that ingests device telemetry over gRPC at a measured rate, stores it efficiently, detects geofence events and pushes live positions to clients.
 
-## Why it matters
-High-throughput ingestion and real-time push are classic system-design topics, and they're where naive CRUD designs collapse. This module gives you real numbers to quote.
+**Why it matters:** high-throughput ingestion and real-time push are classic system-design topics, and they're where naive CRUD designs collapse. This module gives you real numbers to quote.
 
-## Concepts
-- **gRPC:** protobuf contracts, unary vs server/client/bidirectional streaming, deadlines, HTTP/2, why it suits device→backend and service→service traffic.
-- **Backpressure:** bounded `System.Threading.Channels` (`BoundedChannelFullMode`), batching, what to do when full (wait, drop, reject).
-- **Unreliable devices:** retries, duplicates, out-of-order and late data, clock skew; idempotency keys `(device_id, recorded_at)`.
-- **Time-series in Postgres:** declarative range partitioning by day, BRIN indexes, retention by dropping partitions, `COPY` binary import.
-- **Spatial:** PostGIS `geography`, GiST indexes, `ST_Contains`/`ST_DWithin`, NetTopologySuite in EF.
-- **Push:** SignalR hubs, groups per tenant/shipment, coalescing (latest position only), throttling, reconnection; a Redis-protocol backplane (Valkey) for scale-out.
+Each task: 📖 **Learn** → 🔨 **Build** → ✅ **Done when**.
 
-Read: [gRPC on .NET](https://learn.microsoft.com/aspnet/core/grpc/) · [Channels](https://learn.microsoft.com/dotnet/core/extensions/channels) · [Postgres partitioning](https://www.postgresql.org/docs/current/ddl-partitioning.html) · [PostGIS intro](https://postgis.net/workshops/postgis-intro/) · [SignalR scale-out](https://learn.microsoft.com/aspnet/core/signalr/scale)
+---
 
-## Labs
+### T1 · A Postgres image with PostGIS + pgvector
+- 📖 **Learn (20 min):** [Dockerfile reference](https://docs.docker.com/reference/dockerfile/) · [postgis/postgis image](https://hub.docker.com/r/postgis/postgis) · [pgvector installation](https://github.com/pgvector/pgvector#installation)
+- 🔨 **Build:** `deploy/postgres/Dockerfile` `FROM postgis/postgis:17-3.5` that installs `postgresql-17-pgvector`; switch compose to build it. (pgvector is used in M14; one custom image now saves a migration later.)
+- ✅ **Done when:** `CREATE EXTENSION postgis; CREATE EXTENSION vector;` both succeed in a migration.
 
-- [ ] **L1 · Postgres image with PostGIS + pgvector.** `deploy/postgres/Dockerfile` `FROM postgis/postgis:17-3.5` + install `postgresql-17-pgvector`; switch compose to build it. (pgvector is used in M14; one custom image now saves a migration later.)
-  ✅ `CREATE EXTENSION postgis; CREATE EXTENSION vector;` both succeed in a migration.
-- [ ] **L2 · Tracking module + gRPC ingest.** `telemetry.proto` with a client-streaming `Ingest(stream PositionBatch) returns (IngestAck)`. Plus a **device simulator** console app: N devices driving along routes, with configurable rate, duplicates and out-of-order sends.
-  ✅ The simulator streams 1,000 devices × 1 msg/s; the service acks; integration test with a gRPC client.
-- [ ] **L3 · Bounded pipeline + batch writer.** gRPC handler → bounded `Channel<Position>` → a `BackgroundService` writer batching (500 rows or 200 ms) with binary `COPY` into a staging table, then `INSERT … ON CONFLICT DO NOTHING` (dedupe). Expose the channel depth as a metric/log.
-  ✅ `docs/perf/M08-ingest.md`: sustained msg/s, p95 ack latency, and behaviour when the channel is full (you choose and justify: block the stream vs reject).
-- [ ] **L4 · Partitioned storage.** `tracking.positions` partitioned by day, BRIN on `recorded_at`, B-tree on `(device_id, recorded_at desc)`, a job that creates future partitions and drops ones older than 30 days. Compare with an unpartitioned table at 50M rows.
-  ✅ Measurements: insert rate, "last 24 h for one device" query time, table/index size, retention cost (`DROP` partition vs `DELETE`).
-- [ ] **L5 · Geofences.** Depot/customer polygons (`geography`); on each batch, detect enter/exit transitions per device (only *changes* emit `GeofenceEntered`/`GeofenceExited` via the outbox). Shipments reacts: arrival at the destination geofence → `AtDestination`.
-  ✅ Tests with fixture tracks: a vehicle crossing a fence emits exactly one enter + one exit; jitter at the border doesn't flap (add hysteresis/dwell time).
-- [ ] **L6 · Live push with SignalR.** `TrackingHub` with groups per tenant and per shipment; push **coalesced** positions (latest per vehicle per second). A tiny HTML page + the JS client draws positions. Stretch: Valkey backplane (`AddStackExchangeRedis`) in compose + two API instances.
-  ✅ Simulator → ingest → hub → browser shows vehicles moving. A load note: messages/s sent vs received after coalescing.
+### T2 · gRPC ingest + device simulator
+- 📖 **Learn (60 min):** protobuf contracts, unary vs streaming calls, deadlines, HTTP/2. [gRPC on .NET overview](https://learn.microsoft.com/aspnet/core/grpc/) · [Create a gRPC service](https://learn.microsoft.com/aspnet/core/tutorials/grpc/grpc-start) · [gRPC services: streaming methods](https://learn.microsoft.com/aspnet/core/grpc/services#client-streaming-method) · [Deadlines and cancellation](https://learn.microsoft.com/aspnet/core/grpc/deadlines-cancellation)
+- 🔨 **Build:** `telemetry.proto` with client-streaming `Ingest(stream PositionBatch) returns (IngestAck)`, plus a **device simulator** console app: N devices driving along routes, with configurable rate, duplicates and out-of-order sends.
+- ✅ **Done when:** the simulator streams 1,000 devices × 1 msg/s and the service acks; an integration test drives it with a gRPC client.
 
-## Break it
-1. Make the channel unbounded and run the simulator at 10× rate with a slowed writer. Watch memory grow (`dotnet-counters`).
-2. Drop the dedupe and run the simulator with 10% duplicates. Count the inflated distance in a "km driven" query.
+### T3 · Bounded pipeline + batch writer
+- 📖 **Learn (45 min):** backpressure with bounded channels. [System.Threading.Channels](https://learn.microsoft.com/dotnet/core/extensions/channels) (read "Bounding strategies") · [An introduction to System.Threading.Channels (Toub)](https://devblogs.microsoft.com/dotnet/an-introduction-to-system-threading-channels/) · [Npgsql binary COPY](https://www.npgsql.org/doc/copy.html) · [INSERT … ON CONFLICT](https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT)
+- 🔨 **Build:** gRPC handler → bounded `Channel<Position>` → a `BackgroundService` writer batching (500 rows or 200 ms) with binary COPY into a staging table, then `INSERT … ON CONFLICT DO NOTHING` (dedupe). Log or expose the channel depth.
+- ✅ **Done when:** `docs/perf/M08-ingest.md` records sustained msg/s, p95 ack latency, and what happens when the channel is full (block the stream vs reject: choose and justify).
 
-## Decide
-- **ADR-010** Telemetry ingest & storage: gRPC vs HTTP batch vs MQTT; native partitioning vs TimescaleDB; retention.
-- **ADR-011** Real-time transport: SignalR vs SSE vs polling, coalescing policy.
+### T4 · Partitioned time-series storage
+- 📖 **Learn (45 min):** [Table partitioning](https://www.postgresql.org/docs/current/ddl-partitioning.html) · [BRIN indexes](https://www.postgresql.org/docs/current/brin-intro.html)
+- 🔨 **Build:** `tracking.positions` partitioned by day, BRIN on `recorded_at`, a B-tree on `(device_id, recorded_at desc)`, and a job that creates future partitions and drops those older than 30 days. Compare with an unpartitioned table at 50M rows.
+- ✅ **Done when:** you've recorded insert rate, "last 24 h for one device" query time, table/index sizes, and retention cost (`DROP` partition vs `DELETE`).
+
+### T5 · Geofences with PostGIS
+- 📖 **Learn (60 min):** [PostGIS workshop: geography](https://postgis.net/workshops/postgis-intro/geography.html) · [PostGIS workshop: spatial indexing](https://postgis.net/workshops/postgis-intro/indexing.html) · [Npgsql spatial mapping (NetTopologySuite)](https://www.npgsql.org/efcore/mapping/nts.html)
+- 🔨 **Build:** depot/customer polygons (`geography`); per batch, detect enter/exit transitions per device, emitting only *changes* as `GeofenceEntered`/`GeofenceExited` via the outbox. Shipments reacts: arrival at the destination fence → `AtDestination`.
+- ✅ **Done when:** with fixture tracks, crossing a fence emits exactly one enter + one exit, and jitter at the border doesn't flap (hysteresis or dwell time).
+
+### T6 · Live push with SignalR
+- 📖 **Learn (45 min):** [SignalR introduction](https://learn.microsoft.com/aspnet/core/signalr/introduction) · [Hubs & groups](https://learn.microsoft.com/aspnet/core/signalr/groups) · [JavaScript client](https://learn.microsoft.com/aspnet/core/signalr/javascript-client) · [Scale-out with a Redis-protocol backplane](https://learn.microsoft.com/aspnet/core/signalr/redis-backplane)
+- 🔨 **Build:** `TrackingHub` with groups per tenant and per shipment; push **coalesced** positions (latest per vehicle per second); a tiny HTML page using the JS client draws the vehicles. Stretch: a Valkey backplane (`AddStackExchangeRedis`) + two API instances.
+- ✅ **Done when:** simulator → ingest → hub → browser shows vehicles moving, with a note on messages/s before and after coalescing.
+
+### T7 · Break it
+- 🔨 **Build:** (1) make the channel unbounded and run the simulator at 10× with a slowed writer; watch memory in `dotnet-counters`. (2) Drop the dedupe and run with 10% duplicates; measure the inflated "km driven".
+- ✅ **Done when:** both failures are recorded with numbers.
+
+### T8 · Decide: ADR-010 & ADR-011
+- 📖 **Learn (20 min):** [Choosing gRPC vs HTTP APIs](https://learn.microsoft.com/aspnet/core/grpc/comparison) · [Real-time options: SignalR transports](https://learn.microsoft.com/aspnet/core/signalr/introduction#transports)
+- 🔨 **Build:** **ADR-010** ingest & storage (gRPC vs HTTP batch vs MQTT; native partitioning vs TimescaleDB; retention). **ADR-011** real-time transport (SignalR vs SSE vs polling; coalescing policy).
+- ✅ **Done when:** both ADRs cite your measurements.
+
+---
 
 ## Quiz → [answers](../answers/M08.md)
 1. Why gRPC for device ingest, and what are its drawbacks (browsers, load balancers, debugging)?
