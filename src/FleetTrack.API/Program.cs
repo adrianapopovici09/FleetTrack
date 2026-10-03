@@ -15,3 +15,5 @@ app.MapGet("/shipments", () => "{}");
 app.MapPost("/shipments", () => "{}");
 
 app.UseHttpsRedirection();
+
+app.Run();

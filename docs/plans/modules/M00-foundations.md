@@ -21,7 +21,8 @@ Read: [Central Package Management](https://learn.microsoft.com/nuget/consume-pac
 
 - [x] **L1 · SDK + CPM.** `global.json` and `Directory.Packages.props` exist. ✅ Done.
 - [x] **L2 · Layered skeleton.** `src/` Domain / Application / Infrastructure / API, references follow the dependency rule. ✅ Done.
-- [ ] **L3 · Build guardrails.** ◀ **NEXT TASK** Create `Directory.Build.props` at the root with `Nullable=enable`, `TreatWarningsAsErrors=true`, `EnforceCodeStyleInBuild=true`, `AnalysisLevel=latest-recommended`, `ImplicitUsings=enable`. Add an `.editorconfig` (`dotnet new editorconfig`; the `.slnx` already references one that doesn't exist yet). Add the missing `app.Run()` at the end of `Program.cs`. Fix whatever breaks.
+- [x] **L3 · Build guardrails.** 
+Create `Directory.Build.props` at the root with `Nullable=enable`, `TreatWarningsAsErrors=true`, `EnforceCodeStyleInBuild=true`, `AnalysisLevel=latest-recommended`, `ImplicitUsings=enable`. Add an `.editorconfig` (`dotnet new editorconfig`; the `.slnx` already references one that doesn't exist yet). Add the missing `app.Run()` at the end of `Program.cs`. Fix whatever breaks.
   ✅ `dotnet build` from the root has 0 warnings; `dotnet format --verify-no-changes` exits 0; an unused variable now fails the build.
 - [ ] **L4 · Local stack with docker compose.** `deploy/compose.yaml` with **Postgres 17** only: named volume, `POSTGRES_*` env vars from a git-ignored `.env` file (commit a `.env.example`), a `pg_isready` healthcheck. Optionally add pgAdmin. Connect with `psql` from the container and from your host.
   ✅ `docker compose -f deploy/compose.yaml up -d` → `docker compose ps` shows Postgres `healthy`; data survives `down` + `up` (and is gone after `down -v`). You can explain each line of the file.
