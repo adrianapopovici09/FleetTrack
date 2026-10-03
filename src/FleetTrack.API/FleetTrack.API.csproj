@@ -16,4 +16,7 @@
 	<ItemGroup>
 		<Folder Include="Endpoints\" />
 	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\FleetTrack.Application\FleetTrack.Application.csproj" />
+	</ItemGroup>
 </Project>

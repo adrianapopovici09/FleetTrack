@@ -3,7 +3,10 @@
     <File Path=".editorconfig" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/FleetTrack.PublicAPI.csproj" />
+    <Project Path="src/FleetTrack.API/FleetTrack.API.csproj" />
+    <Project Path="src/FleetTrack.Application/FleetTrack.Application.csproj" Id="1c78c1ca-ee16-472d-9ca9-10c164e1d2b0" />
+    <Project Path="src/FleetTrack.Domain/FleetTrack.Domain.csproj" Id="9f2b995f-2a39-4a6b-8726-14f3d9cb8791" />
+    <Project Path="src/FleetTrack.Infrastructure/FleetTrack.Infrastructure.csproj" Id="548898a0-d025-4daf-9124-097e3c018df8" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/FleetTrack.PublicAPI.UnitTests/FleetTrack.PublicAPI.UnitTests.csproj" Id="73d488b7-7daa-4e9d-8ace-8ad2cf90769c" />
