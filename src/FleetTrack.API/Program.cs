@@ -10,6 +10,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
+app.MapGet("/health", () => "{\"status\": \"healthy\"}");
 app.MapGet("/shipments", () => "{}");
 app.MapPost("/shipments", () => "{}");
 
