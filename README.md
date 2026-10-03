@@ -37,7 +37,7 @@ The system evolves the way real systems do: **layered API → modular monolith �
 
 ## Current status
 
-**M00 · Foundations**: SDK pinning, Central Package Management and the layered skeleton are done. Next: build guardrails, docker compose, health checks, test harness, CI.
+**M00 · Foundations**: SDK pinning, Central Package Management, the layered skeleton and build guardrails are done. Next: docker compose, health checks, test harness, CI.
 
 ## Quick start
 

@@ -18,16 +18,16 @@ Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 - 🔨 **Build:** `src/` Domain / Application / Infrastructure / API with references `API → Application → Domain`, `Infrastructure → Application`.
 - ✅ **Done when:** it builds and the reference matrix is in ADR-003.
 
-### T3 · Build guardrails ◀ NEXT TASK
+### T3 · Build guardrails ✔ done
 - 📖 **Learn (30 min):**
   - `Directory.Build.props` applies MSBuild properties to every project below it. [Customize your build by folder](https://learn.microsoft.com/visualstudio/msbuild/customize-by-directory)
   - .NET analyzers, `AnalysisLevel` and enforcing code style at build time. [Code analysis overview](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/overview) (read "Enable additional rules" and "Enforce on build")
   - `.editorconfig` severities. [Configuration files for code analysis](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/configuration-files)
   - Nullable reference types. [Nullable reference types](https://learn.microsoft.com/dotnet/csharp/nullable-references)
-- 🔨 **Build:** `Directory.Build.props` at the root with `Nullable=enable`, `TreatWarningsAsErrors=true`, `EnforceCodeStyleInBuild=true`, `AnalysisLevel=latest-recommended`, `ImplicitUsings=enable`. Add an `.editorconfig` (`dotnet new editorconfig`; the `.slnx` already references one that doesn't exist yet). Add the missing `app.Run()` to `Program.cs`. Fix whatever breaks. Then add the "Build guardrails" section to ADR-002.
+- 🔨 **Build:** `Directory.Build.props` at the root with `Nullable=enable`, `TreatWarningsAsErrors=true`, `EnforceCodeStyleInBuild=true`, `AnalysisLevel=latest-recommended`, `ImplicitUsings=enable`. Add an `.editorconfig` (`dotnet new editorconfig`; the `.slnx` already references one that doesn't exist yet). Add the missing `app.Run()` to `Program.cs`. Fix whatever breaks. (The ADR-002 write-up for this happens in T9.)
 - ✅ **Done when:** `dotnet build` from the root shows 0 warnings; `dotnet format --verify-no-changes` exits 0; an unused variable now fails the build.
 
-### T4 · Local stack with docker compose
+### T4 · Local stack with docker compose ◀ NEXT TASK
 - 📖 **Learn (45 min):**
   - Images vs containers, volumes, networks, port mapping. [Docker overview](https://docs.docker.com/get-started/docker-overview/) · [Volumes](https://docs.docker.com/engine/storage/volumes/)
   - Compose services, `.env` files, `healthcheck`, `depends_on: condition: service_healthy`. [Compose file reference: services](https://docs.docker.com/reference/compose-file/services/) · [Startup order](https://docs.docker.com/compose/how-tos/startup-order/)
@@ -65,7 +65,7 @@ Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 
 ### T9 · Decide: ADR-001, finish ADR-002/003
 - 📖 **Learn (20 min):** what makes an ADR useful later. [ADR GitHub organisation](https://adr.github.io/) · [Documenting architecture decisions (Nygard)](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)
-- 🔨 **Build:** **ADR-001**: docker compose vs native installs vs Aspire, recording *why* Aspire is deferred to M13. Finish **ADR-002** (a real "bad" consequence + revisit trigger) and **ADR-003** (revisit trigger). Use the [template](../../decisions/adr-template.md).
+- 🔨 **Build:** **ADR-001**: docker compose vs native installs vs Aspire, recording *why* Aspire is deferred to M13. Finish **ADR-002** (the "Build guardrails" section from T3, a real "bad" consequence, and a revisit trigger) and **ADR-003** (revisit trigger). Use the [template](../../decisions/adr-template.md).
 - ✅ **Done when:** each ADR has ≥2 options, at least one negative consequence and a revisit trigger.
 
 ---

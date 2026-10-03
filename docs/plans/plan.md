@@ -15,11 +15,11 @@
 | | |
 | --- | --- |
 | **Current module** | [M00 · Foundations & guardrails](modules/M00-foundations.md) |
-| **Done** | M00-T1 SDK pinning + Central Package Management · M00-T2 layered skeleton (`src/` Domain / Application / Infrastructure / API) |
-| **▶ Next task** | **[M00-T3 · Build guardrails](modules/M00-foundations.md)**: read the 4 linked pages in the task (~30 min), then create `Directory.Build.props` (nullable, warnings-as-errors, analyzers) and `.editorconfig`, add the missing `app.Run()` to `src/FleetTrack.API/Program.cs`, then fix every warning. ✅ `dotnet build` with 0 warnings and `dotnet format --verify-no-changes` passes. |
-| **Then** | M00-T4 docker compose (Postgres) → T5 config + health checks by hand → T6 test harness → T7 CI → T8 break it → T9 ADRs |
-| **Known loose ends** | `Program.cs` has a temporary hand-written `/health` endpoint (replaced in T5) · the test project is still named `FleetTrack.PublicAPI.UnitTests` (renamed in T6) · ADR-002/003 need finishing (T9) |
-| **Last session** | 2026-10-03: replaced the old plan with this one; removed the Aspire AppHost (Aspire is deferred to M13) |
+| **Done** | M00-T1 SDK pinning + Central Package Management · M00-T2 layered skeleton · M00-T3 build guardrails (`Directory.Build.props`, `.editorconfig`, `app.Run()`; build 0 warnings, format clean) |
+| **▶ Next task** | **[M00-T4 · Local stack with docker compose](modules/M00-foundations.md)**: read the linked Docker/Compose/Postgres pages (~45 min), then write `deploy/compose.yaml` with Postgres 17 (named volume, `.env` + `.env.example`, `pg_isready` healthcheck). ✅ `docker compose ps` shows Postgres `healthy`; data survives `down`/`up` and is gone after `down -v`. |
+| **Then** | M00-T5 config + health checks by hand → T6 test harness → T7 CI → T8 break it → T9 ADRs |
+| **Known loose ends** | `Program.cs` has a temporary hand-written `/health` endpoint (replaced in T5) · the test project is still named `FleetTrack.PublicAPI.UnitTests` (renamed in T6) · ADR-002/003 need finishing (T9) · `.editorconfig` has only 2 rules, so `EnforceCodeStyleInBuild` has almost nothing to enforce yet · in `FleetTrack.slnx`, `src` is now nested under "Solution Items" (looks accidental) |
+| **Last session** | 2026-10-03: finished M00-T3; plan restructured into tasks with embedded reading |
 
 ---
 
