@@ -15,11 +15,12 @@
 | | |
 | --- | --- |
 | **Current module** | [M00 · Foundations & guardrails](modules/M00-foundations.md) |
-| **Done** | M00-T1 SDK pinning + Central Package Management · M00-T2 layered skeleton · M00-T3 build guardrails (`Directory.Build.props`, `.editorconfig`, `app.Run()`; build 0 warnings, format clean) |
-| **▶ Next task** | **[M00-T4 · Local stack with docker compose](modules/M00-foundations.md)**: read the linked Docker/Compose/Postgres pages (~45 min), then write `deploy/compose.yaml` with Postgres 17 (named volume, `.env` + `.env.example`, `pg_isready` healthcheck). ✅ `docker compose ps` shows Postgres `healthy`; data survives `down`/`up` and is gone after `down -v`. |
-| **Then** | M00-T5 config + health checks by hand → T6 test harness → T7 CI → T8 break it → T9 ADRs |
-| **Known loose ends** | `Program.cs` has a temporary hand-written `/health` endpoint (replaced in T5) · the test project is still named `FleetTrack.PublicAPI.UnitTests` (renamed in T6) · ADR-002/003 need finishing (T9) · optional: `.editorconfig` has `insert_final_newline = false` and most style rules at `silent`/`suggestion`, so few are enforced in the build (raise the ones you care about to `warning` when the code grows) |
-| **Last session** | 2026-10-03: finished M00-T3; plan restructured into tasks with embedded reading |
+| **Done** | M00-T1 SDK pinning + Central Package Management · M00-T2 layered skeleton · M00-T3 build guardrails (`Directory.Build.props`, `.editorconfig`, `app.Run()`; build 0 warnings, format clean) · M00-T4 local stack (`deploy/compose.yaml`: Postgres 17, project `name:`, `.env`/`.env.example` with `:?` fail-fast, port bound to `127.0.0.1` with `POSTGRES_PORT` fallback, named volume, `pg_isready -h 127.0.0.1` healthcheck; all ✅ checks passed) |
+| **▶ Next task** | **[M00-T5 · Configuration & health checks, by hand](modules/M00-foundations.md)**: read the configuration, options, app-secrets and health-check pages (~45 min), then bind `DatabaseOptions` with `ValidateOnStart()`, add `/health/live` + `/health/ready` (NpgSql check) in `AddFleetTrackDefaults()` / `MapFleetTrackDefaults()`, connection string via `dotnet user-secrets`. Add `secrets.json` to `.gitignore` at this point. |
+| **Then** | T6 test harness → T7 CI → T8 break it → T9 ADRs |
+| **Weak spots to revisit** | Named volume vs bind mount (and why bind mounts hurt Postgres on Windows) · `POSTGRES_*` vars only apply on first init of an empty volume; rotate passwords with `ALTER USER` |
+| **Known loose ends** | `Program.cs` has a temporary hand-written `/health` endpoint (replaced in T5) · the test project is still named `FleetTrack.PublicAPI.UnitTests` (renamed in T6) · ADR-002/003 need finishing (T9) · optional: `.editorconfig` has `insert_final_newline = false` and most style rules at `silent`/`suggestion`, so few are enforced in the build (raise the ones you care about to `warning` when the code grows) · optional: add a `.gitattributes` (`* text=auto`) to settle the CRLF/LF mix in `deploy/` · `.gitignore` was trimmed on purpose; rules get re-added in the task that needs them |
+| **Last session** | 2026-10-04: finished M00-T4 (compose stack built step by step; line-explanation check done) |
 
 ---
 

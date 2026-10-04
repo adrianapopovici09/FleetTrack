@@ -27,7 +27,7 @@ Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 - 🔨 **Build:** `Directory.Build.props` at the root with `Nullable=enable`, `TreatWarningsAsErrors=true`, `EnforceCodeStyleInBuild=true`, `AnalysisLevel=latest-recommended`, `ImplicitUsings=enable`. Add an `.editorconfig` (`dotnet new editorconfig`; the `.slnx` already references one that doesn't exist yet). Add the missing `app.Run()` to `Program.cs`. Fix whatever breaks. (The ADR-002 write-up for this happens in T9.)
 - ✅ **Done when:** `dotnet build` from the root shows 0 warnings; `dotnet format --verify-no-changes` exits 0; an unused variable now fails the build.
 
-### T4 · Local stack with docker compose ◀ NEXT TASK
+### T4 · Local stack with docker compose ✔ done
 - 📖 **Learn (45 min):**
   - Images vs containers, volumes, networks, port mapping. [Docker overview](https://docs.docker.com/get-started/docker-overview/) · [Volumes](https://docs.docker.com/engine/storage/volumes/)
   - Compose services, `.env` files, `healthcheck`, `depends_on: condition: service_healthy`. [Compose file reference: services](https://docs.docker.com/reference/compose-file/services/) · [Startup order](https://docs.docker.com/compose/how-tos/startup-order/)
@@ -35,7 +35,7 @@ Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 - 🔨 **Build:** `deploy/compose.yaml` with **Postgres 17** only: a named volume, `POSTGRES_*` from a git-ignored `.env` (commit a `.env.example`), and a `pg_isready` healthcheck. Optionally add pgAdmin. Connect with `psql` both inside the container and from your host.
 - ✅ **Done when:** `docker compose -f deploy/compose.yaml up -d` → `docker compose ps` shows Postgres `healthy`; data survives `down` + `up` and is gone after `down -v`; you can explain each line of the file.
 
-### T5 · Configuration & health checks, by hand
+### T5 · Configuration & health checks, by hand ◀ NEXT TASK
 - 📖 **Learn (45 min):**
   - Configuration providers and their precedence; `__` in env var names. [Configuration in ASP.NET Core](https://learn.microsoft.com/aspnet/core/fundamentals/configuration/) (read "Default application configuration sources" and "Environment variables")
   - Options pattern + validation at startup. [Options pattern](https://learn.microsoft.com/dotnet/core/extensions/options) (read "Options validation" and `ValidateOnStart`)
