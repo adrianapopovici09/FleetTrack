@@ -1,4 +1,5 @@
 ﻿using FleetTrack.Application.Helpers;
+
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 namespace FleetTrack.API.Extensions;
