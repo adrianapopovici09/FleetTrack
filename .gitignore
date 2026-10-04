@@ -41,3 +41,12 @@ output/
 appsettings.*.local.json
 .env
 secrets.json
+
+# ---------------------------------------------------------------------------
+# Test results and coverage
+# ---------------------------------------------------------------------------
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+coverage*.json
+coverage*.xml

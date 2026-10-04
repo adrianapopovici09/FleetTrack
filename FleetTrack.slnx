@@ -9,6 +9,8 @@
     <Project Path="src/FleetTrack.Infrastructure/FleetTrack.Infrastructure.csproj" Id="548898a0-d025-4daf-9124-097e3c018df8" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/FleetTrack.PublicAPI.UnitTests/FleetTrack.PublicAPI.UnitTests.csproj" Id="73d488b7-7daa-4e9d-8ace-8ad2cf90769c" />
+    <Project Path="tests/FleetTrack.ArchitectureTests/FleetTrack.ArchitectureTests.csproj" Id="b556fd33-2907-4af1-a925-af7db29e2c14" />
+    <Project Path="tests/FleetTrack.IntegrationTests/FleetTrack.IntegrationTests.csproj" Id="41f3feee-12d4-4edc-8b55-1f62714e82e0" />
+    <Project Path="tests/FleetTrack.UnitTests/FleetTrack.UnitTests.csproj" Id="73d488b7-7daa-4e9d-8ace-8ad2cf90769c" />
   </Folder>
 </Solution>
