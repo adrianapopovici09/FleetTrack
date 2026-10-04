@@ -20,6 +20,7 @@ is to have a long term project, easy to test. The plan evolves it into a modular
 
 Reference matrix:
 FleetTrack.Api -> FleetTrack.Application
+FleetTrack.Api -> FleetTrack.Infrastructure, but only for the exposed extension method used for registration in the composition root
 FleetTrack.Application -> FleetTrack.Domain
 FleetTrack.Infrastructure -> FleetTrack.Domain + FleetTrack.Application
 

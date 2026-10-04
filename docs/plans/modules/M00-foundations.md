@@ -35,7 +35,7 @@ Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 - 🔨 **Build:** `deploy/compose.yaml` with **Postgres 17** only: a named volume, `POSTGRES_*` from a git-ignored `.env` (commit a `.env.example`), and a `pg_isready` healthcheck. Optionally add pgAdmin. Connect with `psql` both inside the container and from your host.
 - ✅ **Done when:** `docker compose -f deploy/compose.yaml up -d` → `docker compose ps` shows Postgres `healthy`; data survives `down` + `up` and is gone after `down -v`; you can explain each line of the file.
 
-### T5 · Configuration & health checks, by hand ◀ NEXT TASK
+### T5 · Configuration & health checks, by hand ✔ done
 - 📖 **Learn (45 min):**
   - Configuration providers and their precedence; `__` in env var names. [Configuration in ASP.NET Core](https://learn.microsoft.com/aspnet/core/fundamentals/configuration/) (read "Default application configuration sources" and "Environment variables")
   - Options pattern + validation at startup. [Options pattern](https://learn.microsoft.com/dotnet/core/extensions/options) (read "Options validation" and `ValidateOnStart`)
@@ -44,7 +44,7 @@ Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 - 🔨 **Build:** `DatabaseOptions` bound from `ConnectionStrings:FleetTrack` with `ValidateOnStart()`. Add `AddHealthChecks().AddNpgSql(...)` (package `AspNetCore.HealthChecks.NpgSql`) with `/health/live` (no dependencies) and `/health/ready` (checks the DB), replacing the hand-written `/health` string. Put it in your own `AddFleetTrackDefaults()` / `MapFleetTrackDefaults()` extension methods; you'll grow them later and compare with Aspire in M13. Local connection string via `dotnet user-secrets`.
 - ✅ **Done when:** a missing connection string makes the app fail at startup with a clear message; stopping Postgres → `/health/ready` returns 503 while `/health/live` stays 200.
 
-### T6 · Test harness with real dependencies
+### T6 · Test harness with real dependencies ◀ NEXT TASK
 - 📖 **Learn (45 min):**
   - Why not EF InMemory: it isn't a relational database. [Choosing a testing strategy (EF Core)](https://learn.microsoft.com/ef/core/testing/choosing-a-testing-strategy)
   - Integration tests with `WebApplicationFactory`. [Integration tests in ASP.NET Core](https://learn.microsoft.com/aspnet/core/test/integration-tests)

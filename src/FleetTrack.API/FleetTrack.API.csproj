@@ -2,15 +2,14 @@
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
-	</PropertyGroup>
+	  <UserSecretsId>75bc1e84-0533-4129-9911-bd6e6974899e</UserSecretsId>
+  </PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 	</ItemGroup>
 	<ItemGroup>
-		<Folder Include="Endpoints\" />
-	</ItemGroup>
-	<ItemGroup>
 	  <ProjectReference Include="..\FleetTrack.Application\FleetTrack.Application.csproj" />
+	  <ProjectReference Include="..\FleetTrack.Infrastructure\FleetTrack.Infrastructure.csproj" />
 	</ItemGroup>
 </Project>

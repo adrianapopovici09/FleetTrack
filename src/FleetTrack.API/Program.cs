@@ -1,8 +1,10 @@
+using FleetTrack.API.Extensions;
+using FleetTrack.Infrastructure.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddFleetTrackDefaults();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
@@ -10,9 +12,8 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
-app.MapGet("/health", () => "{\"status\": \"healthy\"}");
-app.MapGet("/shipments", () => "{}");
-app.MapPost("/shipments", () => "{}");
+app.MapGet("/", () => "FleetTrack API is running.");
+app.MapFleetTrackDefaults();
 
 app.UseHttpsRedirection();
 app.Run();
