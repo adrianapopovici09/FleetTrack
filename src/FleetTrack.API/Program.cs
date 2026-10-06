@@ -17,3 +17,4 @@ app.MapFleetTrackDefaults();
 
 app.UseHttpsRedirection();
 app.Run();
+
