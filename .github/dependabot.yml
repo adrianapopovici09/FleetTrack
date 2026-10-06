@@ -1,0 +1,27 @@
+version: 2
+updates:
+  # Enable version updates for NuGet
+  - package-ecosystem: "nuget"
+    directory: "/"
+    groups:
+      microsoft-extensions:
+        patterns: ["Microsoft.Extensions.*"]
+    schedule:
+      # No need to check for updates more than once a month because it's a learning project
+      interval: "monthly"
+
+  # Enable version updates for Docker
+  - package-ecosystem: "docker-compose"
+    directory: "/deploy"
+    ignore:
+      - dependency-name: "postgres"
+        update-types: ["version-update:semver-major"]
+    schedule:
+      # No need to check for updates more than once a month because it's a learning project
+      interval: "monthly"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      # No need to check for updates more than once a month because it's a learning project
+      interval: "monthly"
