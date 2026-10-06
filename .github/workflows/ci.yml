@@ -1,0 +1,58 @@
+name: FleetTrack CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      Solution_Name: FleetTrack.slnx
+      ArchitectureTests_Project: tests/FleetTrack.ArchitectureTests/FleetTrack.ArchitectureTests.csproj    
+      IntegrationTests_Project: tests/FleetTrack.IntegrationTests/FleetTrack.IntegrationTests.csproj
+      UnitTests_Project: tests/FleetTrack.UnitTests/FleetTrack.UnitTests.csproj
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+
+    # Install the .NET SDK
+    - name: Install .NET 
+      uses: actions/setup-dotnet@v6
+      with:
+        global-json-file: global.json
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.Solution_Name }}
+
+    - name: Format Check
+      run: dotnet format --verify-no-changes --verbosity normal --no-restore
+
+    - name: Build Release
+      run: dotnet build ${{ env.Solution_Name }} --no-restore --configuration Release
+
+    - name: Run Architecture Tests
+      run: dotnet test ${{ env.ArchitectureTests_Project }} --no-build --verbosity normal --configuration Release
+
+    - name: Run Unit Tests
+      run: dotnet test ${{ env.UnitTests_Project }} --no-build --verbosity normal --configuration Release
+
+    - name: Run Integration Tests
+      run: dotnet test ${{ env.IntegrationTests_Project }} --no-build --verbosity normal --configuration Release
+
+    - name: Vulnerable Package Scan
+      run: |
+           dotnet list package --vulnerable --include-transitive  --verbosity normal > VulnerablePackages.txt
+           cat VulnerablePackages.txt
+           if grep -q "at least one vulnerability" VulnerablePackages.txt; then
+             echo "Vulnerable packages found. Failing the build."
+             exit 1     
+           fi
