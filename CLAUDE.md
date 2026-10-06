@@ -11,6 +11,11 @@ FleetTrack is a **learning project**. The developer is working through [`docs/pl
   4. Full code, only if they explicitly say "show me the solution". Then explain every non-obvious line.
 - Plumbing that isn't the point of the current task (boilerplate, test fixtures, compose syntax) can be written directly when asked.
 - At the start of a session, read the **"📍 Where you are"** box in `plan.md`. When a task is finished (or the session ends), update that box and mark the task done in its module file (move the `◀ NEXT TASK` marker).
+- **Reading notes, one file per task.** When they start a task (or ask for its reading summary), write a summary of its 📖 Learn sources to `docs/plans/reading/Mxx-Ty-<slug>.md`, and add `- 📝 **Notes:** [reading summary](../reading/Mxx-Ty-<slug>.md)` under that task's Learn line in the module file. Add notes task by task as they progress, not ahead for the whole module. Format, following the existing files:
+  - Start with the task link and the source links.
+  - Cover **general knowledge a senior dev / architect should have** first: concepts, industry practice, pitfalls, trade-offs and "when not to".
+  - Write in clear full sentences. Define every abbreviation and term on first use, and explain *why* with a concrete example. Avoid terse bullet notes.
+  - End with "Interview questions this prepares you for" and a short "For FleetTrack" section.
 - Always connect answers to **trade-offs and "when not to"**. That's what the interviews test.
 - Be honest: if their approach is wrong or over-engineered, say so and explain why.
 
@@ -43,5 +48,5 @@ FleetTrack is a **learning project**. The developer is working through [`docs/pl
 
 - .NET 10 (`global.json`), Central Package Management (`Directory.Packages.props`), tests with **NUnit**.
 - Local environment: `docker compose -f deploy/compose.yaml up -d` (built up module by module). Aspire is deliberately deferred to M13.
-- Docs: `docs/plans/` (plan, modules, answers), `docs/decisions/` (ADRs), `docs/design/`, `docs/perf/`, `docs/journal/`, `docs/architecture/`.
+- Docs: `docs/plans/` (plan, modules, answers, reading notes), `docs/decisions/` (ADRs), `docs/design/`, `docs/perf/`, `docs/journal/`, `docs/architecture/`.
 - Commit messages start with the task id: `M02-T3: keyset paging`.
