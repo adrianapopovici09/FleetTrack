@@ -52,7 +52,7 @@ jobs:
       run: |
            dotnet list package --vulnerable --include-transitive  --verbosity normal > VulnerablePackages.txt
            cat VulnerablePackages.txt
-           if grep -q "at least one vulnerability" VulnerablePackages.txt; then
+           if grep -q "has the following vulnerable packages" VulnerablePackages.txt; then
              echo "Vulnerable packages found. Failing the build."
              exit 1     
            fi
