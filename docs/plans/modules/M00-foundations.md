@@ -78,7 +78,7 @@ Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 
 ---
 
-## Quiz → [answers](../answers/M00.md) ◀ NEXT
+## Quiz → [answers](../answers/M00.md) ✔ 11/20
 1. What's the difference between `Directory.Build.props` and `Directory.Packages.props`?
 2. `global.json` pins `10.0.100` with `rollForward: latestFeature`. A machine has only `10.0.300` and `11.0.100` installed. Which SDK is used, and why?
 3. Why are Testcontainers-based tests preferred over the EF Core InMemory provider? Name two concrete bugs InMemory hides.
@@ -90,7 +90,7 @@ Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 9. What's the difference between a named volume and a bind mount, and which do you want for Postgres data?
 10. *Design:* you join a team of 12 developers on a 6-year-old .NET solution with 40 projects and no CI rules. What are your first three guardrails, and in what order?
 
-## Design drill (20 min)
+## Design drill (20 min) ◀ NEXT
 "Design the developer platform for a 5-team .NET organisation: how do new services get created, built, tested and kept consistent?" Cover templates, shared build props, CI, package governance, local environments and architecture rules.
 
 ## Exit check
