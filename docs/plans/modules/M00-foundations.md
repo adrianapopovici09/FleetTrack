@@ -59,13 +59,13 @@ Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 - 🔨 **Build:** rename the test project to `FleetTrack.UnitTests`. Add `FleetTrack.IntegrationTests` (NUnit + `Testcontainers.PostgreSql` + `Microsoft.AspNetCore.Mvc.Testing`) with one test running `SELECT version()` on a container, and one `WebApplicationFactory` test hitting `/health/ready` with the container's connection string injected. Add `FleetTrack.ArchitectureTests`: Domain depends on no framework and no other project; Application doesn't reference Infrastructure.
 - ✅ **Done when:** `dotnet test` is green with no local Postgres running; adding `using Microsoft.EntityFrameworkCore;` to a Domain class fails an architecture test.
 
-### T7 · Continuous integration ◀ NEXT TASK
+### T7 · Continuous integration ✔ done
 - 📖 **Learn (30 min):** [Building and testing .NET with GitHub Actions](https://docs.github.com/actions/use-cases-and-examples/building-and-testing/building-and-testing-net) · [Dependabot options](https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference) · [Protected branches](https://docs.github.com/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) · [`dotnet list package --vulnerable`](https://learn.microsoft.com/dotnet/core/tools/dotnet-list-package)
 - 📝 **Notes:** [reading summary](../reading/M00-T7-continuous-integration.md)
 - 🔨 **Build:** `.github/workflows/ci.yml`: checkout → setup-dotnet (reads `global.json`) → restore → build → format check → test (Testcontainers works on `ubuntu-latest`) → `dotnet list package --vulnerable --include-transitive`. Add `dependabot.yml` (nuget, github-actions, docker) and branch protection requiring the check.
 - ✅ **Done when:** a PR shows the check, and a PR with a formatting violation is blocked.
 
-### T8 · Break it
+### T8 · Break it ◀ NEXT TASK
 - 📖 **Learn (10 min):** reread "Separate readiness and liveness probes" in the health-checks doc from T5.
 - 🔨 **Build:** (1) point `/health/live` at the DB check, stop Postgres, and write down what an orchestrator would do to every instance. (2) Push a "temporary" Domain → Infrastructure reference and watch CI catch it. Revert both.
 - ✅ **Done when:** you've written two short journal notes explaining each failure.
