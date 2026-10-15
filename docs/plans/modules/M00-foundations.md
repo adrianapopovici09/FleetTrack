@@ -65,12 +65,12 @@ Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 - 🔨 **Build:** `.github/workflows/ci.yml`: checkout → setup-dotnet (reads `global.json`) → restore → build → format check → test (Testcontainers works on `ubuntu-latest`) → `dotnet list package --vulnerable --include-transitive`. Add `dependabot.yml` (nuget, github-actions, docker) and branch protection requiring the check.
 - ✅ **Done when:** a PR shows the check, and a PR with a formatting violation is blocked.
 
-### T8 · Break it ◀ NEXT TASK
+### T8 · Break it ✔ done
 - 📖 **Learn (10 min):** reread "Separate readiness and liveness probes" in the health-checks doc from T5.
 - 🔨 **Build:** (1) point `/health/live` at the DB check, stop Postgres, and write down what an orchestrator would do to every instance. (2) Push a "temporary" Domain → Infrastructure reference and watch CI catch it. Revert both.
 - ✅ **Done when:** you've written two short journal notes explaining each failure.
 
-### T9 · Decide: ADR-001, finish ADR-002/003
+### T9 · Decide: ADR-001, finish ADR-002/003 ◀ NEXT TASK
 - 📖 **Learn (20 min):** what makes an ADR useful later. [ADR GitHub organisation](https://adr.github.io/) · [Documenting architecture decisions (Nygard)](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)
 - 🔨 **Build:** **ADR-001**: docker compose vs native installs vs Aspire, recording *why* Aspire is deferred to M13. Finish **ADR-002** (the "Build guardrails" section from T3, a real "bad" consequence, and a revisit trigger) and **ADR-003** (revisit trigger). Use the [template](../../decisions/adr-template.md).
 - ✅ **Done when:** each ADR has ≥2 options, at least one negative consequence and a revisit trigger.
