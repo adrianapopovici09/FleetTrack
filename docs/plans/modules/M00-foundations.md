@@ -70,14 +70,15 @@ Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 - 🔨 **Build:** (1) point `/health/live` at the DB check, stop Postgres, and write down what an orchestrator would do to every instance. (2) Push a "temporary" Domain → Infrastructure reference and watch CI catch it. Revert both.
 - ✅ **Done when:** you've written two short journal notes explaining each failure.
 
-### T9 · Decide: ADR-001, finish ADR-002/003 ◀ NEXT TASK
+### T9 · Decide: ADR-001, finish ADR-002/003 ✔ done
 - 📖 **Learn (20 min):** what makes an ADR useful later. [ADR GitHub organisation](https://adr.github.io/) · [Documenting architecture decisions (Nygard)](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)
+- 📝 **Notes:** [reading summary](../reading/M00-T9-adrs.md)
 - 🔨 **Build:** **ADR-001**: docker compose vs native installs vs Aspire, recording *why* Aspire is deferred to M13. Finish **ADR-002** (the "Build guardrails" section from T3, a real "bad" consequence, and a revisit trigger) and **ADR-003** (revisit trigger). Use the [template](../../decisions/adr-template.md).
 - ✅ **Done when:** each ADR has ≥2 options, at least one negative consequence and a revisit trigger.
 
 ---
 
-## Quiz → [answers](../answers/M00.md)
+## Quiz → [answers](../answers/M00.md) ◀ NEXT
 1. What's the difference between `Directory.Build.props` and `Directory.Packages.props`?
 2. `global.json` pins `10.0.100` with `rollForward: latestFeature`. A machine has only `10.0.300` and `11.0.100` installed. Which SDK is used, and why?
 3. Why are Testcontainers-based tests preferred over the EF Core InMemory provider? Name two concrete bugs InMemory hides.
