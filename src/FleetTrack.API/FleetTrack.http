@@ -1,6 +1,6 @@
-@FleetTrack_HostAddress = http://localhost:5182
+@FleetTrack_HostAddress = https://localhost:7103/
 
-GET {{FleetTrack_HostAddress}}/weatherforecast/
+GET {{FleetTrack_HostAddress}}health/live
 Accept: application/json
 
 ###
