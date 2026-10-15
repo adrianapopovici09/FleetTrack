@@ -5,7 +5,7 @@ using System.Text;
 
 namespace FleetTrack.Domain;
 
-internal class Class1
+internal sealed class Class1
 {
     public static void Test()
     {
