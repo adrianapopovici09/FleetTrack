@@ -67,7 +67,7 @@ Here is the classic trigger, sync-over-async in an endpoint:
 ```csharp
 app.MapGet("/slow-sync", () =>
 {
-    Task.Delay(500).Result;     // ❌ blocks this pool thread for 500 ms
+    Task.Delay(500).Wait();     // ❌ blocks this pool thread for 500 ms (Task.Delay returns a plain Task, so .Wait() rather than .Result)
     return "done";
 });
 ```
@@ -137,7 +137,7 @@ Write down **your own** numbers (use your machine's core count) before you run a
 
 ## 4. Where sync-over-async hides in real code
 
-Nobody writes `Task.Delay(500).Result` on purpose. In real code, blocking hides in places like these:
+Nobody writes `Task.Delay(500).Wait()` on purpose. In real code, blocking hides in places like these:
 
 | Hiding place | Example | Why it blocks |
 | --- | --- | --- |
@@ -369,7 +369,7 @@ Measurements are only worth something if the comparison is fair. A checklist:
 
 ### For FleetTrack
 
-- The lab goes in `labs/` (a throwaway minimal API, outside FleetTrack's architecture), with two endpoints: `/slow-sync` (`Task.Delay(500).Result`) and `/slow-async` (`await Task.Delay(500)`).
+- The lab goes in `labs/` (a throwaway minimal API, outside FleetTrack's architecture), with two endpoints: `/slow-sync` (`Task.Delay(500).Wait()`) and `/slow-async` (`await Task.Delay(500)`).
 - The write-up goes in `docs/perf/M01-threadpool.md` (§8).
 - The habit carries into FleetTrack: no `.Result`, `.Wait()`, synchronous EF Core calls or `Thread.Sleep` on request paths. A good review question for every PR is "does anything here block a thread?"
 - k6 comes back in M10 (performance and caching), with thresholds and arrival-rate scenarios, against FleetTrack's real endpoints.
