@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AsyncThreads": {
+      "commandName": "Project",
+      "commandLineArgs": "1"
+    }
+  }
+}
