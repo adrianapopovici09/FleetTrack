@@ -93,5 +93,5 @@ Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 ## Design drill (20 min) ✔ done 2026-10-17
 "Design the developer platform for a 5-team .NET organisation: how do new services get created, built, tested and kept consistent?" Cover templates, shared build props, CI, package governance, local environments and architecture rules.
 
-## Exit check ◀ NEXT
+## Exit check ✔ done 2026-10-17
 Clean clone → `docker compose up` → `dotnet build` (0 warnings) → `dotnet test` green → `/health/ready` works → CI required on `main` → ADR-001/002/003 complete.

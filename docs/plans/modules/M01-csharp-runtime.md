@@ -8,15 +8,16 @@ These tasks go in `labs/` (a throwaway console + benchmark solution, outside Fle
 
 ---
 
-### T1 · How async/await really works
+### T1 · How async/await really works ✔ done
 - 📖 **Learn (60 min):**
   - The compiler-generated state machine, and what `await` does on an incomplete task. [How async/await really works in C# (Toub)](https://devblogs.microsoft.com/dotnet/how-async-await-really-works/) (long; read up to "SynchronizationContext and ConfigureAwait")
   - `SynchronizationContext`, and why ASP.NET Core has none. [ConfigureAwait FAQ](https://devblogs.microsoft.com/dotnet/configureawait-faq/)
   - `Task` vs `ValueTask`. [Understanding the whys, whats and whens of ValueTask](https://devblogs.microsoft.com/dotnet/understanding-the-whys-whats-and-whens-of-valuetask/)
+- 📝 **Notes:** [reading summary](../reading/M01-T1-async-await.md)
 - 🔨 **Build:** a console app that logs `Environment.CurrentManagedThreadId` before and after awaits (completed vs incomplete tasks, `Task.Yield`, `ConfigureAwait(false)`). Decompile one async method with [SharpLab](https://sharplab.io) and annotate the state machine.
 - ✅ **Done when:** a journal note explains, in your own words, when the code after `await` runs on a different thread, and why.
 
-### T2 · Thread-pool starvation (sync-over-async)
+### T2 · Thread-pool starvation (sync-over-async) ◀ NEXT TASK
 - 📖 **Learn (30 min):** [Debug thread-pool starvation (tutorial)](https://learn.microsoft.com/dotnet/core/diagnostics/debug-threadpool-starvation) · [dotnet-counters](https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-counters) · [k6 getting started](https://grafana.com/docs/k6/latest/get-started/running-k6/)
 - 🔨 **Build:** a minimal API endpoint calling `Task.Delay(500).Result`. Load it with k6 (100 VUs) while running `dotnet-counters monitor -n <proc> System.Runtime` (thread-pool thread count, queue length). Then make it properly async and repeat.
 - ✅ **Done when:** `docs/perf/M01-threadpool.md` has both runs: RPS, p95, thread count and queue length, with an explanation.
