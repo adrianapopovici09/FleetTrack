@@ -19,6 +19,7 @@ These tasks go in `labs/` (a throwaway console + benchmark solution, outside Fle
 
 ### T2 · Thread-pool starvation (sync-over-async) ◀ NEXT TASK
 - 📖 **Learn (30 min):** [Debug thread-pool starvation (tutorial)](https://learn.microsoft.com/dotnet/core/diagnostics/debug-threadpool-starvation) · [dotnet-counters](https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-counters) · [k6 getting started](https://grafana.com/docs/k6/latest/get-started/running-k6/)
+- 📝 **Notes:** [reading summary](../reading/M01-T2-threadpool-starvation.md)
 - 🔨 **Build:** a minimal API endpoint calling `Task.Delay(500).Result`. Load it with k6 (100 VUs) while running `dotnet-counters monitor -n <proc> System.Runtime` (thread-pool thread count, queue length). Then make it properly async and repeat.
 - ✅ **Done when:** `docs/perf/M01-threadpool.md` has both runs: RPS, p95, thread count and queue length, with an explanation.
 
