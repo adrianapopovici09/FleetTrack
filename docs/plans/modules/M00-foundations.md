@@ -90,8 +90,8 @@ Each task: 📖 **Learn** (read first) → 🔨 **Build** → ✅ **Done when**.
 9. What's the difference between a named volume and a bind mount, and which do you want for Postgres data?
 10. *Design:* you join a team of 12 developers on a 6-year-old .NET solution with 40 projects and no CI rules. What are your first three guardrails, and in what order?
 
-## Design drill (20 min) ◀ NEXT
+## Design drill (20 min) ✔ done 2026-10-17
 "Design the developer platform for a 5-team .NET organisation: how do new services get created, built, tested and kept consistent?" Cover templates, shared build props, CI, package governance, local environments and architecture rules.
 
-## Exit check
+## Exit check ◀ NEXT
 Clean clone → `docker compose up` → `dotnet build` (0 warnings) → `dotnet test` green → `/health/ready` works → CI required on `main` → ADR-001/002/003 complete.
