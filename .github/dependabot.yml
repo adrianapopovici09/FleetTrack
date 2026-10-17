@@ -6,6 +6,8 @@ updates:
     groups:
       microsoft-extensions:
         patterns: ["Microsoft.Extensions.*"]
+      nunit-extensions:
+        patterns: ["*NUnit*"]
     schedule:
       # No need to check for updates more than once a month because it's a learning project
       interval: "monthly"
