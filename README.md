@@ -37,13 +37,62 @@ The system evolves the way real systems do: **layered API → modular monolith �
 
 ## Current status
 
-**M00 · Foundations**: SDK pinning, Central Package Management, the layered skeleton and build guardrails are done. Next: docker compose, health checks, test harness, CI.
+**M00 · Foundations**: SDK pinning, Central Package Management, layered skeleton, build guardrails, docker compose, configuration and health checks, test harness, CI and the first ADRs are done. Next: M01 · C# & runtime.
 
 ## Quick start
 
-```powershell
-docker compose -f deploy/compose.yaml up -d   # local dependencies (from M00-T4)
-dotnet build .\FleetTrack.slnx
-dotnet test  .\FleetTrack.slnx
-dotnet run   --project .\src\FleetTrack.API
-```
+**Prerequisites:** the .NET SDK version pinned in [`global.json`](global.json), and Docker Desktop (or another Docker engine) running.
+
+Commands are PowerShell, run from the repository root.
+
+1. **Clone the repository.**
+
+   ```powershell
+   git clone https://github.com/adrianapopovici09/FleetTrack.git
+   cd FleetTrack
+   ```
+
+2. **Create the local environment file.** Copy the example, then replace every `CHANGE_ME` with your own values. `deploy/.env` is git-ignored, so never commit it.
+
+   ```powershell
+   Copy-Item deploy/.env.example deploy/.env
+   ```
+
+   `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB` are applied **only the first time** the data volume is created. To change them later, either run `docker compose -f deploy/compose.yaml down -v` (this deletes the data) or use `ALTER USER` in `psql`.
+
+3. **Start Postgres and wait until it's healthy.**
+
+   ```powershell
+   docker compose -f deploy/compose.yaml up -d
+   docker compose -f deploy/compose.yaml ps    # STATUS should show (healthy)
+   ```
+
+4. **Build and run the tests.** The build must show 0 warnings (warnings are errors). The integration tests start their own Postgres with Testcontainers, so step 3 isn't needed for them, only Docker.
+
+   ```powershell
+   dotnet build FleetTrack.slnx
+   dotnet test  FleetTrack.slnx    # check the test count, not just "succeeded"
+   ```
+
+5. **Set the API's connection string.** Use the values from `deploy/.env`. The API reads the connection string from configuration, and Compose doesn't pass it in.
+
+   ```powershell
+   dotnet user-secrets set "ConnectionStrings:FleetTrack" "Host=127.0.0.1;Port=<POSTGRES_PORT>;Database=<POSTGRES_DB>;Username=<POSTGRES_USER>;Password=<POSTGRES_PASSWORD>" --project src/FleetTrack.API
+   ```
+
+   In containers or CI, set the environment variable `ConnectionStrings__FleetTrack` instead (the `__` stands for `:`). If the connection string is missing, the API refuses to start and prints these instructions.
+
+6. **Run the API and check its health.**
+
+   ```powershell
+   dotnet run --project src/FleetTrack.API
+   ```
+
+   Then, in another terminal:
+
+   ```powershell
+   curl.exe http://localhost:5182/health/live     # 200: the process is up
+   curl.exe http://localhost:5182/health/ready    # 200: Postgres is reachable; 503 if it's stopped
+   ```
+
+To stop the stack, run `docker compose -f deploy/compose.yaml down`. Your data survives this; add `-v` to delete the data too.
