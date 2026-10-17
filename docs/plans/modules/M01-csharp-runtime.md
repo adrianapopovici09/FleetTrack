@@ -17,13 +17,13 @@ These tasks go in `labs/` (a throwaway console + benchmark solution, outside Fle
 - 🔨 **Build:** a console app that logs `Environment.CurrentManagedThreadId` before and after awaits (completed vs incomplete tasks, `Task.Yield`, `ConfigureAwait(false)`). Decompile one async method with [SharpLab](https://sharplab.io) and annotate the state machine.
 - ✅ **Done when:** a journal note explains, in your own words, when the code after `await` runs on a different thread, and why.
 
-### T2 · Thread-pool starvation (sync-over-async) ◀ NEXT TASK
+### T2 · Thread-pool starvation (sync-over-async) ✔ done
 - 📖 **Learn (30 min):** [Debug thread-pool starvation (tutorial)](https://learn.microsoft.com/dotnet/core/diagnostics/debug-threadpool-starvation) · [dotnet-counters](https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-counters) · [k6 getting started](https://grafana.com/docs/k6/latest/get-started/running-k6/)
 - 📝 **Notes:** [reading summary](../reading/M01-T2-threadpool-starvation.md)
-- 🔨 **Build:** a minimal API endpoint calling `Task.Delay(500).Result`. Load it with k6 (100 VUs) while running `dotnet-counters monitor -n <proc> System.Runtime` (thread-pool thread count, queue length). Then make it properly async and repeat.
+- 🔨 **Build:** a minimal API endpoint calling `Task.Delay(500).Wait()` (`Task.Delay` returns a plain `Task`, so there is no `.Result`; it blocks the same way). Load it with k6 (100 VUs) while running `dotnet-counters monitor -n <proc> System.Runtime` (thread-pool thread count, queue length). Then make it properly async and repeat.
 - ✅ **Done when:** `docs/perf/M01-threadpool.md` has both runs: RPS, p95, thread count and queue length, with an explanation.
 
-### T3 · Cancellation end to end
+### T3 · Cancellation end to end ◀ NEXT TASK
 - 📖 **Learn (30 min):** [Cancellation in managed threads](https://learn.microsoft.com/dotnet/standard/threading/cancellation-in-managed-threads) · [Recommended patterns for CancellationToken (Cleary)](https://devblogs.microsoft.com/premier-developer/recommended-patterns-for-cancellationtoken/)
 - 🔨 **Build:** endpoint → service → Npgsql query (`SELECT pg_sleep(10)`) passing the request's `CancellationToken`. Abort the request and log where cancellation surfaces. Add a linked token with a 2 s timeout.
 - ✅ **Done when:** a test (or a documented manual check via `pg_stat_activity`) proves that aborting the request cancels the DB query.
