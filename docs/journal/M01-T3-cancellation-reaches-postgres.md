@@ -49,7 +49,19 @@ fail: Program[0]
 
 **Both cases failed in Postgres with the same error, `57014: canceling statement due to user request`.**
 
-**The probe** (no token on the query): one snapshot showed the query `active` (`PgSleep`) after 2.9 s. That doesn't prove much on its own, since a normal running request looks the same. **Still to confirm:** a snapshot taken after the abort, showing it still `active` at 6–9 s.
+**The probe** (no token on the query). First surprise: the build **refused** to compile `ExecuteReaderAsync()` without the token. Rule CA2016 ("forward the `cancellationToken`") is an error under FleetTrack's `latest-recommended` + warnings-as-errors. So the guardrail already catches the most common form of this bug. To simulate it anyway, the probe passed `CancellationToken.None` explicitly.
+
+Then a client gave up after 1 s, and `pg_stat_activity` was read every second (rerun by Claude, 2026-10-21):
+
+```
+client gave up after 1.0 s
+active | PgSleep    | since start  1.3 s
+active | PgSleep    | since start  4.6 s
+active | PgSleep    | since start  9.0 s
+idle   | ClientRead | since start 10.1 s   ← stopped only when pg_sleep(10) finished on its own
+```
+
+The query ran for the full 10 seconds after the client had left. The app log showed only `Service: starting report`: no cancellation surfaced anywhere, **not even from the 2-second timeout**, because the linked token never reached Npgsql.
 
 **A bug in my logging, now fixed:** the "client aborted" flag was first printed as `!cancellationToken.IsCancellationRequested`, so it said `False` for the real abort and `True` for the timeout. The behaviour was right; only the label was inverted. Now the endpoint's abort branch logs `yes`, the service checks the **request** token, and the repository logs `unknown`, because it only sees the linked token and can't tell the two causes apart. A rerun showed the right labels:
 
