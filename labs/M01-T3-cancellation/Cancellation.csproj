@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>fleettrack-labs-m01-t3-cancellation</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Version comes from Directory.Packages.props (CPM); licence already checked for FleetTrack. -->
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+</Project>

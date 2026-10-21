@@ -23,12 +23,13 @@ These tasks go in `labs/` (a throwaway console + benchmark solution, outside Fle
 - 🔨 **Build:** a minimal API endpoint calling `Task.Delay(500).Wait()` (`Task.Delay` returns a plain `Task`, so there is no `.Result`; it blocks the same way). Load it with k6 (100 VUs) while running `dotnet-counters monitor -n <proc> System.Runtime` (thread-pool thread count, queue length). Then make it properly async and repeat.
 - ✅ **Done when:** `docs/perf/M01-threadpool.md` has both runs: RPS, p95, thread count and queue length, with an explanation.
 
-### T3 · Cancellation end to end ◀ NEXT TASK
+### T3 · Cancellation end to end ✔ done
 - 📖 **Learn (30 min):** [Cancellation in managed threads](https://learn.microsoft.com/dotnet/standard/threading/cancellation-in-managed-threads) · [Recommended patterns for CancellationToken (Cleary)](https://devblogs.microsoft.com/premier-developer/recommended-patterns-for-cancellationtoken/)
+- 📝 **Notes:** [reading summary](../reading/M01-T3-cancellation.md)
 - 🔨 **Build:** endpoint → service → Npgsql query (`SELECT pg_sleep(10)`) passing the request's `CancellationToken`. Abort the request and log where cancellation surfaces. Add a linked token with a 2 s timeout.
 - ✅ **Done when:** a test (or a documented manual check via `pg_stat_activity`) proves that aborting the request cancels the DB query.
 
-### T4 · Memory, the GC and allocation-free code
+### T4 · Memory, the GC and allocation-free code ◀ NEXT TASK
 - 📖 **Learn (60 min):**
   - Generations, the LOH, and what triggers a GC. [Fundamentals of garbage collection](https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals)
   - `Span<T>`, `Memory<T>`, and why spans can't live on the heap. [Memory- and span-related types](https://learn.microsoft.com/dotnet/standard/memory-and-spans/) · [Memory<T> and Span<T> usage guidelines](https://learn.microsoft.com/dotnet/standard/memory-and-spans/memory-t-usage-guidelines)

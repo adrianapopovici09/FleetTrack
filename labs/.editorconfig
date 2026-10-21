@@ -1,0 +1,8 @@
+# Labs are throwaway katas (M01), not production code: relax rules that cost readability here.
+# Merges with the root .editorconfig; src/ and tests/ keep the full rule set.
+
+[*.cs]
+# Logging performance (LoggerMessage delegates, expensive argument evaluation).
+# Plain logger.LogInformation(...) is fine in a lab; FleetTrack's own code keeps these on.
+dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA1873.severity = none
