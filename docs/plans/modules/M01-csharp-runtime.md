@@ -34,6 +34,7 @@ These tasks go in `labs/` (a throwaway console + benchmark solution, outside Fle
   - Generations, the LOH, and what triggers a GC. [Fundamentals of garbage collection](https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals)
   - `Span<T>`, `Memory<T>`, and why spans can't live on the heap. [Memory- and span-related types](https://learn.microsoft.com/dotnet/standard/memory-and-spans/) · [Memory<T> and Span<T> usage guidelines](https://learn.microsoft.com/dotnet/standard/memory-and-spans/memory-t-usage-guidelines)
   - Benchmarking correctly. [BenchmarkDotNet: getting started](https://benchmarkdotnet.org/articles/guides/getting-started.html)
+- 📝 **Notes:** [reading summary](../reading/M01-T4-memory-gc-spans.md)
 - 🔨 **Build:** parse a telemetry line `"DEV-42;2026-10-03T10:00:00Z;45.75;21.22;63.5"` three ways: `string.Split` + `double.Parse`; `ReadOnlySpan<char>` slicing; `Utf8Parser` over bytes. Benchmark them with `[MemoryDiagnoser]`. (This parser is reused in M08.)
 - ✅ **Done when:** a results table in `docs/perf/M01-parsing.md` + one paragraph explaining *why* each version allocates what it does.
 
