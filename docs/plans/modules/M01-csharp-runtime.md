@@ -50,7 +50,7 @@ These tasks go in `labs/` (a throwaway console + benchmark solution, outside Fle
 - 🔨 **Build:** rewrite 3 classes (from FleetTrack or past work) using records, primary constructors, `required`, pattern matching and collection expressions.
 - ✅ **Done when:** before/after in your journal, plus one feature you'd *avoid* in a team codebase and why.
 
-### T7 · Break it & write team guidelines ◀ NEXT TASK
+### T7 · Break it & write team guidelines ✔ done
 - 📖 **Learn (10 min):** [ThreadPool.SetMinThreads](https://learn.microsoft.com/dotnet/api/system.threading.threadpool.setminthreads) (read the remarks).
 - 📝 **Notes:** [reading summary](../reading/M01-T7-setminthreads-guidelines.md)
 - 🔨 **Build:** in T2, add `ThreadPool.SetMinThreads(200, 200)` and rerun the sync-over-async version. Then write `docs/journal/M01.md` with a **team guideline** section: 5 rules on async, cancellation and DI you'd put in a team wiki.
