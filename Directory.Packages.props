@@ -21,5 +21,7 @@
     <!-- Package versions for labs -->
     <!-- BenchmarkDotNet: MIT licence (checked 2026-10-21, M01-T4) -->
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
+    <!-- Microsoft.Extensions.DependencyInjection: MIT licence (checked 2026-10-24, M01-T5) -->
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
   </ItemGroup>
 </Project>
