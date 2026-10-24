@@ -1,9 +1,26 @@
 namespace DiLifetimes;
 
-// The singleton. This is the point of the task: write it yourself (lesson: captive dependencies).
-// Step 1: take TenantContext in the constructor and expose which instance it holds → the captive.
-// Step 2: fix it with IServiceScopeFactory so each call gets the TenantContext of its own scope.
-// You may need two classes (the captive one and the fixed one) so both tests can exist side by side.
+// Needs the current request's TenantContext. Registered as a singleton it captures the first
+// scope's instance (the captive); the fix is to register it as scoped, so it lives in the request's scope.
+// IServiceScopeFactory is the fix only where there is no request scope (a BackgroundService, a queue consumer):
+// a scope created here would hold a fresh TenantContext with TenantId = null, not the request's one.
 public sealed class TenantReportService
 {
+    private readonly TenantContext _tenantContext;
+
+    public TenantReportService(TenantContext tenantContext)
+    {
+        _tenantContext = tenantContext;
+    }
+
+    public Guid GetInstanceId()
+    {
+        return _tenantContext.InstanceId;
+    }
+
+    // Lets the tests check whether the scope that created the context has released it.
+    public bool IsTenantContextDisposed()
+    {
+        return _tenantContext.IsDisposed;
+    }
 }

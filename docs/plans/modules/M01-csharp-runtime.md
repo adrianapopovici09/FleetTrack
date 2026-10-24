@@ -38,13 +38,13 @@ These tasks go in `labs/` (a throwaway console + benchmark solution, outside Fle
 - 🔨 **Build:** parse a telemetry line `"DEV-42;2026-10-03T10:00:00Z;45.75;21.22;63.5"` three ways: `string.Split` + `double.Parse`; `ReadOnlySpan<char>` slicing; `Utf8Parser` over bytes. Benchmark them with `[MemoryDiagnoser]`. (This parser is reused in M08.)
 - ✅ **Done when:** a results table in `docs/journal/M01-T4-parsing-allocations.md` + one paragraph explaining *why* each version allocates what it does.
 
-### T5 · DI lifetimes & captive dependencies ◀ NEXT TASK
+### T5 · DI lifetimes & captive dependencies ✔ done
 - 📖 **Learn (30 min):** [Service lifetimes](https://learn.microsoft.com/dotnet/core/extensions/dependency-injection#service-lifetimes) · [DI guidelines: captive dependencies and scope validation](https://learn.microsoft.com/dotnet/core/extensions/dependency-injection-guidelines) · [Keyed services](https://learn.microsoft.com/dotnet/core/extensions/dependency-injection#keyed-services)
 - 📝 **Notes:** [reading summary](../reading/M01-T5-di-lifetimes.md) (includes an appendix on quiz Q8 `Task.WhenAll` bounding and Q9 `IAsyncEnumerable`, which no task covers)
 - 🔨 **Build:** inject a scoped service into a singleton. Run with `ValidateScopes = false`, then `true`. Fix it with `IServiceScopeFactory`.
 - ✅ **Done when:** a test shows the startup failure with validation on, and the fixed version passes.
 
-### T6 · Modern C# for team codebases
+### T6 · Modern C# for team codebases ◀ NEXT TASK
 - 📖 **Learn (40 min):** [What's new in C# 12](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-12) (primary constructors, collection expressions) · [What's new in C# 13](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-13) · [What's new in C# 14](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-14) (`field` keyword, extension members) · [Records](https://learn.microsoft.com/dotnet/csharp/fundamentals/types/records) · [Pattern matching](https://learn.microsoft.com/dotnet/csharp/fundamentals/functional/pattern-matching)
 - 🔨 **Build:** rewrite 3 classes (from FleetTrack or past work) using records, primary constructors, `required`, pattern matching and collection expressions.
 - ✅ **Done when:** before/after in your journal, plus one feature you'd *avoid* in a team codebase and why.
