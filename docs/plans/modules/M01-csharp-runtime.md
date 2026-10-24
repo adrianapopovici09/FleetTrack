@@ -44,13 +44,15 @@ These tasks go in `labs/` (a throwaway console + benchmark solution, outside Fle
 - 🔨 **Build:** inject a scoped service into a singleton. Run with `ValidateScopes = false`, then `true`. Fix it with `IServiceScopeFactory`.
 - ✅ **Done when:** a test shows the startup failure with validation on, and the fixed version passes.
 
-### T6 · Modern C# for team codebases ◀ NEXT TASK
+### T6 · Modern C# for team codebases ⏭ skipped (lesson only)
 - 📖 **Learn (40 min):** [What's new in C# 12](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-12) (primary constructors, collection expressions) · [What's new in C# 13](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-13) · [What's new in C# 14](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-14) (`field` keyword, extension members) · [Records](https://learn.microsoft.com/dotnet/csharp/fundamentals/types/records) · [Pattern matching](https://learn.microsoft.com/dotnet/csharp/fundamentals/functional/pattern-matching)
+- 📝 **Notes:** [reading summary](../reading/M01-T6-modern-csharp.md)
 - 🔨 **Build:** rewrite 3 classes (from FleetTrack or past work) using records, primary constructors, `required`, pattern matching and collection expressions.
 - ✅ **Done when:** before/after in your journal, plus one feature you'd *avoid* in a team codebase and why.
 
-### T7 · Break it & write team guidelines
+### T7 · Break it & write team guidelines ✔ done
 - 📖 **Learn (10 min):** [ThreadPool.SetMinThreads](https://learn.microsoft.com/dotnet/api/system.threading.threadpool.setminthreads) (read the remarks).
+- 📝 **Notes:** [reading summary](../reading/M01-T7-setminthreads-guidelines.md)
 - 🔨 **Build:** in T2, add `ThreadPool.SetMinThreads(200, 200)` and rerun the sync-over-async version. Then write `docs/journal/M01.md` with a **team guideline** section: 5 rules on async, cancellation and DI you'd put in a team wiki.
 - ✅ **Done when:** the note explains why `SetMinThreads` is a band-aid (and when it's legitimate), and the 5 rules are written.
 
