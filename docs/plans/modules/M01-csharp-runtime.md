@@ -46,6 +46,7 @@ These tasks go in `labs/` (a throwaway console + benchmark solution, outside Fle
 
 ### T6 · Modern C# for team codebases ◀ NEXT TASK
 - 📖 **Learn (40 min):** [What's new in C# 12](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-12) (primary constructors, collection expressions) · [What's new in C# 13](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-13) · [What's new in C# 14](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-14) (`field` keyword, extension members) · [Records](https://learn.microsoft.com/dotnet/csharp/fundamentals/types/records) · [Pattern matching](https://learn.microsoft.com/dotnet/csharp/fundamentals/functional/pattern-matching)
+- 📝 **Notes:** [reading summary](../reading/M01-T6-modern-csharp.md)
 - 🔨 **Build:** rewrite 3 classes (from FleetTrack or past work) using records, primary constructors, `required`, pattern matching and collection expressions.
 - ✅ **Done when:** before/after in your journal, plus one feature you'd *avoid* in a team codebase and why.
 
