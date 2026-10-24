@@ -1,10 +1,12 @@
-# M01-T2 · Thread-pool starvation: sync-over-async vs async
+# M01-T2: thread-pool starvation, sync-over-async vs async
 
-* **Task:** [M01-T2](../plans/modules/M01-csharp-runtime.md) · **Lesson:** [reading notes](../plans/reading/M01-T2-threadpool-starvation.md)
-* **Lab:** [labs/M01-T2-starvation](../../labs/M01-T2-starvation/) (`Program.cs`, `load.js`)
 * **Date:** 2026-10-17
+* **Task:** M01-T2 (Thread-pool starvation) · [lesson](../plans/reading/M01-T2-threadpool-starvation.md)
+* **Lab:** [labs/M01-T2-starvation](../../labs/M01-T2-starvation/) (`Program.cs`, `load.js`)
 
-## Setup
+## What I did
+
+I ran the same 500 ms delay as a blocking endpoint and as an async one, under the same load, twice each, and recorded k6 results and thread-pool counters.
 
 | | |
 | --- | --- |
@@ -32,7 +34,7 @@ k6 run -e ENDPOINT=slow-sync labs/M01-T2-starvation/load.js
 
 During the sync run, also try `curl.exe -w "%{time_total}s\n" http://localhost:5000/ping` and see how long a request that does no blocking work at all takes.
 
-## Prediction (written before running)
+### My prediction (written before running)
 
 Little's law: concurrency = throughput × latency. With blocking code, each in-flight request holds one thread, so **max throughput = threads ÷ 0.5 s**. 100 VUs are always waiting for a response, so **latency = 100 ÷ throughput**.
 
@@ -48,7 +50,7 @@ Little's law: concurrency = throughput × latency. With blocking code, each in-f
 
 Why: the sync endpoint holds a thread for the whole 500 ms, and above its minimum (one thread per core) the pool adds threads only slowly. The async endpoint gives the thread back during the delay, so 4 threads are enough for 100 concurrent requests. Recent .NET versions add threads faster when they detect blocking on a task, so sync results above the predicted range wouldn't be a surprise.
 
-## Results
+## What I observed
 
 ### Run 1
 
@@ -156,15 +158,18 @@ Why run 2's p95 looks healthy:
 - **Different shape from run 1:** in run 1 the pool injected in bursts with pauses and requests trickled through; in run 2 it injected steadily (+26, +12, +9 … +4/s) and caught up sooner, but nothing completed until it did. Thread injection isn't deterministic, which is why the task asks for two runs.
 - **Idle threads retire ~20 s after the load stops** (103 → 0), so the next burst starts from scratch and starves again.
 
-## Explanation
+## What would happen in production
+
+SetMinThreads is not a fix because the ceil can still be hit and the issue appers again.
+The measurements to look after: rising thread count, queue length above 0, low CPU with high latency, max latency
+
+## Why
 
 For the sync endpoints there was the need to add new threads to the pool because the others were blocked waiting, while the async endpoints did not because instead of waiting threads were freed to the pool to do other work while the waiting happened.
 The prediction was off because the calculations I did used 4 cores, instead of actual 8. Also the threads were added much faster than just one or two per second.
 In sync runs, the p95 showed different behavior. There was a 13s freeze with 0 work items finished, then when the pool reached 100 threads it performed at almost the same speed as async and the freeze was totally omited by the p95 because of when the threads were added to the thread pool.
 In async this behavior is not seen because there is no need for new threads to be added to the pool.
 
-## In production
+## The fix / the rule I'll follow
 
 The rule is to always use async all the way. Task.Run is still executed on the thread pool and the sync still blocks.
-SetMinThreads is not a fix because the ceil can still be hit and the issue appers again.
-The measurements to look after: rising thread count, queue length above 0, low CPU with high latency, max latency
