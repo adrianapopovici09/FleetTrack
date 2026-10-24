@@ -302,7 +302,7 @@ Measurements are only worth something if the comparison is fair. A checklist:
 - **Record the context:** core count, .NET version, VUs, duration, which endpoint.
 - **Watch the counters during the run.** k6's summary only gives you the *end* result. The thread count climbing over time, live in `dotnet-counters`, is the story.
 
-### What `docs/perf/M01-threadpool.md` should contain
+### What `docs/journal/M01-T2-threadpool-starvation.md` should contain
 
 1. **Setup:** machine (cores), .NET version, k6 settings, the two endpoints.
 2. **Prediction:** your Little's law estimate (§3) for each endpoint, written *before* running.
@@ -370,6 +370,6 @@ Measurements are only worth something if the comparison is fair. A checklist:
 ### For FleetTrack
 
 - The lab goes in `labs/` (a throwaway minimal API, outside FleetTrack's architecture), with two endpoints: `/slow-sync` (`Task.Delay(500).Wait()`) and `/slow-async` (`await Task.Delay(500)`).
-- The write-up goes in `docs/perf/M01-threadpool.md` (§8).
+- The write-up goes in `docs/journal/M01-T2-threadpool-starvation.md` (§8).
 - The habit carries into FleetTrack: no `.Result`, `.Wait()`, synchronous EF Core calls or `Thread.Sleep` on request paths. A good review question for every PR is "does anything here block a thread?"
 - k6 comes back in M10 (performance and caching), with thresholds and arrival-rate scenarios, against FleetTrack's real endpoints.

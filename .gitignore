@@ -13,6 +13,9 @@
 # ---------------------------------------------------------------------------
 output/
 
+# BenchmarkDotNet reports and logs (regenerated on every run)
+BenchmarkDotNet.Artifacts/
+
 # ---------------------------------------------------------------------------
 # Visual Studio user-specific files and folders (never committed)
 # ---------------------------------------------------------------------------

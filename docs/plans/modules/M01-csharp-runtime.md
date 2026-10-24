@@ -21,7 +21,7 @@ These tasks go in `labs/` (a throwaway console + benchmark solution, outside Fle
 - 📖 **Learn (30 min):** [Debug thread-pool starvation (tutorial)](https://learn.microsoft.com/dotnet/core/diagnostics/debug-threadpool-starvation) · [dotnet-counters](https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-counters) · [k6 getting started](https://grafana.com/docs/k6/latest/get-started/running-k6/)
 - 📝 **Notes:** [reading summary](../reading/M01-T2-threadpool-starvation.md)
 - 🔨 **Build:** a minimal API endpoint calling `Task.Delay(500).Wait()` (`Task.Delay` returns a plain `Task`, so there is no `.Result`; it blocks the same way). Load it with k6 (100 VUs) while running `dotnet-counters monitor -n <proc> System.Runtime` (thread-pool thread count, queue length). Then make it properly async and repeat.
-- ✅ **Done when:** `docs/perf/M01-threadpool.md` has both runs: RPS, p95, thread count and queue length, with an explanation.
+- ✅ **Done when:** `docs/journal/M01-T2-threadpool-starvation.md` has both runs: RPS, p95, thread count and queue length, with an explanation.
 
 ### T3 · Cancellation end to end ✔ done
 - 📖 **Learn (30 min):** [Cancellation in managed threads](https://learn.microsoft.com/dotnet/standard/threading/cancellation-in-managed-threads) · [Recommended patterns for CancellationToken (Cleary)](https://devblogs.microsoft.com/premier-developer/recommended-patterns-for-cancellationtoken/)
@@ -29,22 +29,22 @@ These tasks go in `labs/` (a throwaway console + benchmark solution, outside Fle
 - 🔨 **Build:** endpoint → service → Npgsql query (`SELECT pg_sleep(10)`) passing the request's `CancellationToken`. Abort the request and log where cancellation surfaces. Add a linked token with a 2 s timeout.
 - ✅ **Done when:** a test (or a documented manual check via `pg_stat_activity`) proves that aborting the request cancels the DB query.
 
-### T4 · Memory, the GC and allocation-free code ◀ NEXT TASK
+### T4 · Memory, the GC and allocation-free code ✔ done
 - 📖 **Learn (60 min):**
   - Generations, the LOH, and what triggers a GC. [Fundamentals of garbage collection](https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals)
   - `Span<T>`, `Memory<T>`, and why spans can't live on the heap. [Memory- and span-related types](https://learn.microsoft.com/dotnet/standard/memory-and-spans/) · [Memory<T> and Span<T> usage guidelines](https://learn.microsoft.com/dotnet/standard/memory-and-spans/memory-t-usage-guidelines)
   - Benchmarking correctly. [BenchmarkDotNet: getting started](https://benchmarkdotnet.org/articles/guides/getting-started.html)
 - 📝 **Notes:** [reading summary](../reading/M01-T4-memory-gc-spans.md)
 - 🔨 **Build:** parse a telemetry line `"DEV-42;2026-10-03T10:00:00Z;45.75;21.22;63.5"` three ways: `string.Split` + `double.Parse`; `ReadOnlySpan<char>` slicing; `Utf8Parser` over bytes. Benchmark them with `[MemoryDiagnoser]`. (This parser is reused in M08.)
-- ✅ **Done when:** a results table in `docs/perf/M01-parsing.md` + one paragraph explaining *why* each version allocates what it does.
+- ✅ **Done when:** a results table in `docs/journal/M01-T4-parsing-allocations.md` + one paragraph explaining *why* each version allocates what it does.
 
-### T5 · DI lifetimes & captive dependencies
+### T5 · DI lifetimes & captive dependencies ✔ done
 - 📖 **Learn (30 min):** [Service lifetimes](https://learn.microsoft.com/dotnet/core/extensions/dependency-injection#service-lifetimes) · [DI guidelines: captive dependencies and scope validation](https://learn.microsoft.com/dotnet/core/extensions/dependency-injection-guidelines) · [Keyed services](https://learn.microsoft.com/dotnet/core/extensions/dependency-injection#keyed-services)
 - 📝 **Notes:** [reading summary](../reading/M01-T5-di-lifetimes.md) (includes an appendix on quiz Q8 `Task.WhenAll` bounding and Q9 `IAsyncEnumerable`, which no task covers)
 - 🔨 **Build:** inject a scoped service into a singleton. Run with `ValidateScopes = false`, then `true`. Fix it with `IServiceScopeFactory`.
 - ✅ **Done when:** a test shows the startup failure with validation on, and the fixed version passes.
 
-### T6 · Modern C# for team codebases
+### T6 · Modern C# for team codebases ◀ NEXT TASK
 - 📖 **Learn (40 min):** [What's new in C# 12](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-12) (primary constructors, collection expressions) · [What's new in C# 13](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-13) · [What's new in C# 14](https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-14) (`field` keyword, extension members) · [Records](https://learn.microsoft.com/dotnet/csharp/fundamentals/types/records) · [Pattern matching](https://learn.microsoft.com/dotnet/csharp/fundamentals/functional/pattern-matching)
 - 🔨 **Build:** rewrite 3 classes (from FleetTrack or past work) using records, primary constructors, `required`, pattern matching and collection expressions.
 - ✅ **Done when:** before/after in your journal, plus one feature you'd *avoid* in a team codebase and why.
