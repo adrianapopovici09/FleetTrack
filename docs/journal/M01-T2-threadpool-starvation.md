@@ -63,7 +63,7 @@ Why: the sync endpoint holds a thread for the whole 500 ms, and above its minimu
 | Process CPU (8 logical processors) | ~0–5 % throughout | ~0–6 % throughout |
 | `/ping` time during the run | not measured | not measured |
 
-Counters: [M01-sync-run1.csv](M01-sync-run1.csv) · [M01-async-run1.csv](M01-async-run1.csv). In that file, `dotnet-counters` exports the thread count and queue length as **per-second changes** (`/ 1 sec`), so the values above are running totals of those changes, from an idle baseline of ~1 thread.
+Counters: [M01-sync-run1.csv](../perf/M01-sync-run1.csv) · [M01-async-run1.csv](../perf/M01-async-run1.csv). In that file, `dotnet-counters` exports the thread count and queue length as **per-second changes** (`/ 1 sec`), so the values above are running totals of those changes, from an idle baseline of ~1 thread.
 
 #### `/slow-sync` run 1, second by second
 
@@ -130,7 +130,7 @@ Observations:
 | Thread count at ~5 s / ~15 s / ~30 s | 55 / 101 / 103 | 11 / 11 / 12 |
 | Queue length at ~5 s / ~15 s / ~30 s | 50 / 0 / 0 | 0 / 0 / 0 (one blip to 88 at ~16 s, drained within a second) |
 
-Counters: [M01-sync-run2.csv](M01-sync-run2.csv) · [M01-async-run2.csv](M01-async-run2.csv).
+Counters: [M01-sync-run2.csv](../perf/M01-sync-run2.csv) · [M01-async-run2.csv](../perf/M01-async-run2.csv).
 
 **Async is reproducible; sync isn't.** Both async runs gave exactly 5,900 requests at 194 req/s, p95 521–523 ms, ~9–12 threads and ~620–660 work items/s. The two sync runs differed a lot (41.7 vs 112.9 req/s, p95 5.11 s vs 522 ms), because their behaviour depends on the thread pool's non-deterministic injection.
 

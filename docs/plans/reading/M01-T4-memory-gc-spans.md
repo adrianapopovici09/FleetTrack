@@ -395,5 +395,5 @@ Post your predictions here before running anything.
 
 - **The lab** goes in `labs/M01-T4-parsing`: a console project with the three parsers, a quick correctness check (all three return the same reading), and a BenchmarkDotNet class with `[MemoryDiagnoser]` and the `Split` version as baseline.
 - **BenchmarkDotNet** is a new package: it's MIT-licensed (fine for FleetTrack rule 7), and its version goes in `Directory.Packages.props` like every other package.
-- **The ✅ write-up** goes in `docs/perf/M01-parsing.md`: the results table, plus one paragraph explaining *why* each version allocates what it does.
+- **The ✅ write-up** goes in `docs/journal/M01-T4-parsing-allocations.md`: the results table, plus one paragraph explaining *why* each version allocates what it does.
 - **Reuse in M08:** the winning parser becomes the core of the telemetry ingest path, returning a `readonly record struct TelemetryReading`. That's the hot path where this work actually pays for itself.
