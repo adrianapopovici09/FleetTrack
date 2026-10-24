@@ -52,6 +52,7 @@ These tasks go in `labs/` (a throwaway console + benchmark solution, outside Fle
 
 ### T7 · Break it & write team guidelines ◀ NEXT TASK
 - 📖 **Learn (10 min):** [ThreadPool.SetMinThreads](https://learn.microsoft.com/dotnet/api/system.threading.threadpool.setminthreads) (read the remarks).
+- 📝 **Notes:** [reading summary](../reading/M01-T7-setminthreads-guidelines.md)
 - 🔨 **Build:** in T2, add `ThreadPool.SetMinThreads(200, 200)` and rerun the sync-over-async version. Then write `docs/journal/M01.md` with a **team guideline** section: 5 rules on async, cancellation and DI you'd put in a team wiki.
 - ✅ **Done when:** the note explains why `SetMinThreads` is a band-aid (and when it's legitimate), and the 5 rules are written.
 
