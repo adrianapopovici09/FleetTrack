@@ -8,8 +8,9 @@ Persistence can be a simple EF `DbContext` here; M03 does the data layer properl
 
 ---
 
-### T1 · Minimal API endpoints + OpenAPI
+### T1 · Minimal API endpoints + OpenAPI ◀ NEXT TASK
 - 📖 **Learn (45 min):** [Minimal APIs overview](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/overview) · [Route groups](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/route-handlers#route-groups) · [TypedResults](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/responses) · [OpenAPI document generation](https://learn.microsoft.com/aspnet/core/fundamentals/openapi/aspnetcore-openapi) · [Scalar for ASP.NET Core](https://guides.scalar.com/scalar/scalar-api-references/integrations/net-aspnet-core)
+- 📝 **Notes:** [reading summary](../reading/M02-T1-minimal-apis-openapi.md)
 - 🔨 **Build:** route group `/api/v1/shipments` with `POST`, `GET {id}`, `GET` (list) and `PATCH {id}/status`; `TypedResults`; `201 Created` + `Location`; built-in OpenAPI + `app.MapScalarApiReference()`.
 - ✅ **Done when:** Scalar shows all endpoints with request/response schemas, and an integration test posts a shipment and gets the same one back.
 
