@@ -16,6 +16,7 @@ Persistence can be a simple EF `DbContext` here; M03 does the data layer properl
 
 ### T2 · Validation & the error contract
 - 📖 **Learn (45 min):** [RFC 9457: Problem Details](https://www.rfc-editor.org/rfc/rfc9457) (sections 3–4) · [Handle errors in APIs](https://learn.microsoft.com/aspnet/core/fundamentals/error-handling-api) (`AddProblemDetails`, `IExceptionHandler`) · [Minimal API validation in .NET 10](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis#validation-support-in-minimal-apis)
+- 📝 **Notes:** [reading summary](../reading/M02-T2-validation-error-contract.md)
 - 🔨 **Build:** `builder.Services.AddValidation()` with DataAnnotations on request records; `AddProblemDetails()`; an `IExceptionHandler` for unexpected errors; a table of stable `type` URIs (`https://fleettrack.dev/errors/validation`, `.../not-found`, `.../conflict`…) in `docs/api/errors.md`.
 - ✅ **Done when:** tests show invalid body → 400 with field errors, unknown id → 404, and every error is `application/problem+json` with a documented `type`.
 
