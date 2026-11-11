@@ -433,7 +433,7 @@ What it proves, which a unit test of the handler doesn't:
 
 ## 14. Minimal APIs vs controllers, and other trade-offs
 
-ASP.NET Core still supports **controllers** (MVC: classes deriving from `ControllerBase`, attribute routing, action filters). Both are first-class:
+ASP.NET Core still supports **controllers**: classes deriving from `ControllerBase`, with attribute routing (`[HttpGet("{id}")]`) and action filters. They come from **ASP.NET Core MVC**, named after the **Model-View-Controller** pattern: the *model* is the data, the *view* renders it (HTML pages in the original web-app use), and the *controller* receives the request and picks the response. A JSON API has no views, so "MVC" in API talk just means "the controller-based framework". Both styles are first-class:
 
 | | Minimal APIs | Controllers |
 | --- | --- | --- |
@@ -443,6 +443,10 @@ ASP.NET Core still supports **controllers** (MVC: classes deriving from `Control
 | Validation | Built in since .NET 10 (T2) | Built in for years (`[ApiController]`) |
 | Ecosystem features | Newer; most features now available | Mature: OData, some libraries still assume MVC |
 | Risk | Endpoints scattered in big `Program.cs` files if nobody organises them | Fat controllers with business logic |
+
+**Native AOT** (ahead-of-time compilation) compiles the app to machine code at publish time instead of shipping IL that the JIT (just-in-time compiler) translates at runtime. The result starts in milliseconds, uses less memory and needs no .NET runtime installed, which matters for serverless functions and fast-scaling containers. The price: no runtime code generation, and reflection only works on what the trimmer could see at build time. **AOT-friendly** code avoids those dynamic features, usually by relying on source generators instead. Minimal APIs are AOT-friendly because the Request Delegate Generator writes the binding code at build time; MVC controllers discover and bind actions by reflection, so they aren't supported. For a long-running FleetTrack API the startup gain is small, so this is a tie-breaker, not a deciding reason.
+
+**OData** (Open Data Protocol) is a standard for query-string conventions that let the *client* shape the query: `GET /shipments?$filter=status eq 'Delivered'&$orderby=createdAt desc&$top=20&$select=id,status`. The ASP.NET Core OData library translates that into LINQ over your `IQueryable`, so one endpoint answers many queries. It's popular for Microsoft-ecosystem integrations (Power BI, Excel, Dynamics). The trade-off: the client can write expensive queries you never indexed for, and your database shape leaks into the public contract. FleetTrack uses explicit query parameters instead. The OData library still assumes MVC controllers, which is why it appears in the table.
 
 New projects at Microsoft and in most teams default to minimal APIs. **When controllers still make sense:** a large existing MVC codebase (consistency beats novelty, M01-T6 §1), or a dependency on MVC-only features. Mixing both in one API is possible but doubles the conventions a reader must know.
 
