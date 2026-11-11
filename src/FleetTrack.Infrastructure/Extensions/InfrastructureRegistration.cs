@@ -1,5 +1,7 @@
 ﻿using FleetTrack.Application.Helpers;
+using FleetTrack.Application.Shipments;
 using FleetTrack.Infrastructure.Configurations;
+using FleetTrack.Infrastructure.Shipments;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,7 +17,15 @@ public static class InfrastructureRegistration
     {
         AddConfiguration(services, configuration);
         AddHealthChecks(services);
+        AddRepositories(services);
         return services;
+    }
+
+    private static void AddRepositories(IServiceCollection services)
+    {
+        // Singleton: the in-memory store must outlive the request. Becomes scoped
+        // with the DbContext in M03.
+        services.AddSingleton<IShipmentRepository, InMemoryShipmentRepository>();
     }
 
     private static void AddConfiguration(IServiceCollection services, IConfiguration configuration)

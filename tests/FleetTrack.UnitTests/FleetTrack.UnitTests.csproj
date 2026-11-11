@@ -16,4 +16,10 @@
 		<Using Include="NUnit.Framework" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\FleetTrack.Application\FleetTrack.Application.csproj" />
+		<ProjectReference Include="..\..\src\FleetTrack.Domain\FleetTrack.Domain.csproj" />
+		<ProjectReference Include="..\..\src\FleetTrack.Infrastructure\FleetTrack.Infrastructure.csproj" />
+	</ItemGroup>
+
 </Project>

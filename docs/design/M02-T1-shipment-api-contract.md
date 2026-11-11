@@ -8,7 +8,7 @@ The contract decisions for `/api/v1/shipments`, made before building. Each one i
 
 - One route group, `/api/v1/shipments`, created in a `MapShipmentEndpoints()` extension on `IEndpointRouteBuilder` and called from `Program.cs` (like `MapFleetTrackDefaults()`).
 - The group owns what all four endpoints share: the prefix, `.WithTags("Shipments")`, and later auth, filters and versioning.
-- One file per endpoint (vertical-slice style). **Why:** each handler will grow on its own as validation, ETags and idempotency arrive (T2–T5), and separate files keep diffs and merge conflicts small. **Cost:** more navigation for four small handlers today; the shared group setup lives apart from the handlers.
+- One `ShipmentEndpoints` class holding the group and the four handlers as private static methods, matching the single `ShipmentService`. **Why:** four small handlers read best in one place, next to the group setup they share. **Revisit when** handlers grow on their own (validation, ETags, idempotency in T2–T5) or the file passes a few hundred lines: then split into one file per endpoint (vertical-slice style), which keeps diffs and merge conflicts small. (First choice was one file per endpoint; changed while building, since it was premature for four handlers.)
 
 ## 2. Responses per handler
 
@@ -49,3 +49,19 @@ Strings on the wire (`"InTransit"`), configured once with `JsonStringEnumConvert
 - **Why:** readable in logs and Scalar, and reordering the C# enum can't silently change the contract (with numbers, `2` would suddenly mean something else).
 - **Evolution:** the set of statuses is documented as **open**: new values may be added, and clients must tolerate values they don't know. Adding a status is then non-breaking; renaming or removing one is breaking.
 - How the status is stored in the database is a separate decision (M03).
+
+## 6. Status transitions and how failures are reported
+
+```
+Pending ──► InTransit ──► Delivered
+   │
+   └──────► Cancelled
+
+Delivered, Cancelled = terminal
+X → X (same status)   = no-op, success
+anything else         = illegal → 409
+```
+
+- **Left out on purpose:** `InTransit → Cancelled` (once the truck has left, getting the goods back is a return, a separate flow); a failed-delivery status (can be added later, the status set is open).
+- **Illegal transitions are returned, not thrown.** The status-change method returns a result the caller must inspect; the handler maps it explicitly to `Ok` or `Conflict`. **Why:** an illegal transition is an expected outcome of user input, not a bug; a return value makes the failure visible in the signature, keeps the handler's `Results<...>` union truthful (and therefore the OpenAPI document), and avoids the cost of throwing on a path clients can trigger at will. **Exceptions are kept for bugs and broken invariants**, which T2's global exception handler turns into a 500.
+- **Rejected:** one custom exception per action, mapped to status codes by a global handler. It hides the failure from the signature, makes the handler's union lie, and couples the API to every domain exception type.

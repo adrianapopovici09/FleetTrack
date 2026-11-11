@@ -1,4 +1,6 @@
-﻿using FleetTrack.Application.Helpers;
+﻿using System.Text.Json.Serialization;
+
+using FleetTrack.Application.Helpers;
 
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
@@ -18,6 +20,10 @@ public static class FleetTrackDefaults
     {
         services.AddOpenApi();
         services.AddHealthChecks();
+
+        // Enums go over the wire as strings ("InTransit"), in the JSON and in the OpenAPI schema.
+        services.ConfigureHttpJsonOptions(options =>
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         return services;
     }
