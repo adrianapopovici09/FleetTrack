@@ -1,12 +1,13 @@
 using FleetTrack.Application.Shipments;
 using FleetTrack.Domain.Shipments;
+using System.ComponentModel.DataAnnotations;
 
 namespace FleetTrack.API.Endpoints.Shipments;
 
 // The JSON contract of /api/v1/shipments. Only the API layer knows these types;
 // the Application layer works with ShipmentDetails.
 
-public sealed record CreateShipmentRequest(string Destination);
+public sealed record CreateShipmentRequest([Required][MaxLength(Shipment.DestinationMaxLength)] string Destination);
 
 public sealed record ChangeShipmentStatusRequest(ShipmentStatus Status);
 

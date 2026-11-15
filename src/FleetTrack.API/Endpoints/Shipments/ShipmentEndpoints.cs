@@ -1,3 +1,4 @@
+using FleetTrack.API.Errors;
 using FleetTrack.Application.Shipments;
 
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -13,11 +14,18 @@ public static class ShipmentEndpoints
         var group = app.MapGroup("/api/v1/shipments")
             .WithTags("Shipments");
 
-        group.MapPost("/", CreateShipment);
+        // ProblemHttpResult carries no OpenAPI metadata (its status code is only known at run time),
+        // so each error response is declared here for the generated document.
+        group.MapPost("/", CreateShipment)
+            .ProducesValidationProblem();
         group.MapGet("/{id:guid}", GetShipment)
-            .WithName(GetShipmentRouteName);
+            .WithName(GetShipmentRouteName)
+            .ProducesProblem(StatusCodes.Status404NotFound);
         group.MapGet("/", ListShipments);
-        group.MapPatch("/{id:guid}/status", ChangeShipmentStatus);
+        group.MapPatch("/{id:guid}/status", ChangeShipmentStatus)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         return app;
     }
@@ -36,7 +44,7 @@ public static class ShipmentEndpoints
             new { id = created.Id });
     }
 
-    private static async Task<Results<Ok<ShipmentResponse>, NotFound>> GetShipment(
+    private static async Task<Results<Ok<ShipmentResponse>, ProblemHttpResult>> GetShipment(
         Guid id,
         ShipmentService service,
         CancellationToken cancellationToken)
@@ -44,7 +52,7 @@ public static class ShipmentEndpoints
         var shipment = await service.GetAsync(id, cancellationToken);
 
         return shipment is null
-            ? TypedResults.NotFound()
+            ? ShipmentNotFound(id)
             : TypedResults.Ok(ShipmentResponse.From(shipment));
     }
 
@@ -58,7 +66,7 @@ public static class ShipmentEndpoints
         return TypedResults.Ok(new ShipmentListResponse(shipments.Select(ShipmentResponse.From).ToList()));
     }
 
-    private static async Task<Results<Ok<ShipmentResponse>, NotFound, Conflict>> ChangeShipmentStatus(
+    private static async Task<Results<Ok<ShipmentResponse>, ProblemHttpResult>> ChangeShipmentStatus(
         Guid id,
         ChangeShipmentStatusRequest request,
         ShipmentService service,
@@ -69,10 +77,31 @@ public static class ShipmentEndpoints
         // Changed and NotChanged are both success: a retried PATCH must not fail.
         return change switch
         {
-            { Outcome: StatusChangeOutcome.NotFound } => TypedResults.NotFound(),
-            { Outcome: StatusChangeOutcome.IllegalTransition } => TypedResults.Conflict(),
+            { Outcome: StatusChangeOutcome.NotFound } => ShipmentNotFound(id),
+            { Outcome: StatusChangeOutcome.IllegalTransition, Shipment: { } current } =>
+                InvalidStatusTransition(id, current.Status.ToString(), request.Status.ToString()),
             { Shipment: { } shipment } => TypedResults.Ok(ShipmentResponse.From(shipment)),
             _ => throw new InvalidOperationException($"Unhandled status change outcome {change.Outcome}.")
         };
     }
+
+    // Titles are fixed per type (docs/api/errors.md); only detail and extensions vary per occurrence.
+    private static ProblemHttpResult ShipmentNotFound(Guid id) =>
+        TypedResults.Problem(
+            statusCode: StatusCodes.Status404NotFound,
+            type: ProblemTypes.NotFound,
+            title: "The resource was not found.",
+            detail: $"Shipment {id} was not found.");
+
+    private static ProblemHttpResult InvalidStatusTransition(Guid id, string currentStatus, string requestedStatus) =>
+        TypedResults.Problem(
+            statusCode: StatusCodes.Status409Conflict,
+            type: ProblemTypes.InvalidStatusTransition,
+            title: "The status transition is not allowed.",
+            detail: $"Shipment {id} is {currentStatus} and cannot move to {requestedStatus}.",
+            extensions: new Dictionary<string, object?>
+            {
+                ["currentStatus"] = currentStatus,
+                ["requestedStatus"] = requestedStatus,
+            });
 }

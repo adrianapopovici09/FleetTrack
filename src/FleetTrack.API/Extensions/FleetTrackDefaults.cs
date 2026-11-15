@@ -1,8 +1,9 @@
-﻿using System.Text.Json.Serialization;
-
+﻿using FleetTrack.API.Errors;
 using FleetTrack.Application.Helpers;
-
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace FleetTrack.API.Extensions;
 
@@ -25,6 +26,30 @@ public static class FleetTrackDefaults
         services.ConfigureHttpJsonOptions(options =>
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
+        services.AddValidation();
+        services.AddProblemDetails(options =>
+        {
+            options.CustomizeProblemDetails = context =>
+            {
+                if (context.ProblemDetails is HttpValidationProblemDetails validation)
+                {
+                    // Only AddValidation() produces HttpValidationProblemDetails, so this is
+                    // the one place every validation failure passes through.
+                    validation.Type = ProblemTypes.Validation;
+
+                    var camelCased = validation.Errors.ToDictionary(
+                        pair => JsonNamingPolicy.CamelCase.ConvertName(pair.Key),
+                        pair => pair.Value);
+
+                    validation.Errors.Clear();
+                    foreach (var (key, messages) in camelCased)
+                    {
+                        validation.Errors[key] = messages;
+                    }
+                }
+            };
+        });
+        services.AddExceptionHandler<UnhandledExceptionHandler>();
         return services;
     }
 }

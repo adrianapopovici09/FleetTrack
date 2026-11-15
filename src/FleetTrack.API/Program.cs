@@ -13,7 +13,12 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline. Order matters: each middleware only sees
+// what runs after it, so the error handlers come first.
+app.UseExceptionHandler();   // unhandled exception -> 500 Problem Details (UnhandledExceptionHandler)
+app.UseStatusCodePages();    // empty 4xx/5xx (no route, bad JSON) -> Problem Details body
+app.UseHttpsRedirection();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -24,5 +29,4 @@ app.MapGet("/", () => "FleetTrack API is running.");
 app.MapFleetTrackDefaults();
 app.MapShipmentEndpoints();
 
-app.UseHttpsRedirection();
 app.Run();

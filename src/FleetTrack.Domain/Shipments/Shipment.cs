@@ -2,6 +2,8 @@
 
 public sealed class Shipment
 {
+    public const int DestinationMaxLength = 200;
+
     public Guid Id { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public string Destination { get; private set; }
@@ -18,6 +20,10 @@ public sealed class Shipment
     public static Shipment Create(DateTimeOffset createdAt, string destination)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(destination);
+        if (destination.Length > DestinationMaxLength)
+        {
+            throw new ArgumentException($"Destination cannot exceed {DestinationMaxLength} characters.", nameof(destination));
+        }
 
         return new Shipment(createdAt, destination);
     }
