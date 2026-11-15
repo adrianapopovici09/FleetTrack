@@ -8,20 +8,21 @@ Persistence can be a simple EF `DbContext` here; M03 does the data layer properl
 
 ---
 
-### T1 · Minimal API endpoints + OpenAPI ◀ NEXT TASK
+### T1 · Minimal API endpoints + OpenAPI ✔ done
 - 📖 **Learn (45 min):** [Minimal APIs overview](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/overview) · [Route groups](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/route-handlers#route-groups) · [TypedResults](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/responses) · [OpenAPI document generation](https://learn.microsoft.com/aspnet/core/fundamentals/openapi/aspnetcore-openapi) · [Scalar for ASP.NET Core](https://guides.scalar.com/scalar/scalar-api-references/integrations/net-aspnet-core)
 - 📝 **Notes:** [reading summary](../reading/M02-T1-minimal-apis-openapi.md)
 - 🔨 **Build:** route group `/api/v1/shipments` with `POST`, `GET {id}`, `GET` (list) and `PATCH {id}/status`; `TypedResults`; `201 Created` + `Location`; built-in OpenAPI + `app.MapScalarApiReference()`.
 - ✅ **Done when:** Scalar shows all endpoints with request/response schemas, and an integration test posts a shipment and gets the same one back.
 
-### T2 · Validation & the error contract
+### T2 · Validation & the error contract ✔ done
 - 📖 **Learn (45 min):** [RFC 9457: Problem Details](https://www.rfc-editor.org/rfc/rfc9457) (sections 3–4) · [Handle errors in APIs](https://learn.microsoft.com/aspnet/core/fundamentals/error-handling-api) (`AddProblemDetails`, `IExceptionHandler`) · [Minimal API validation in .NET 10](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis#validation-support-in-minimal-apis)
 - 📝 **Notes:** [reading summary](../reading/M02-T2-validation-error-contract.md)
 - 🔨 **Build:** `builder.Services.AddValidation()` with DataAnnotations on request records; `AddProblemDetails()`; an `IExceptionHandler` for unexpected errors; a table of stable `type` URIs (`https://fleettrack.dev/errors/validation`, `.../not-found`, `.../conflict`…) in `docs/api/errors.md`.
 - ✅ **Done when:** tests show invalid body → 400 with field errors, unknown id → 404, and every error is `application/problem+json` with a documented `type`.
 
-### T3 · Keyset pagination
+### T3 · Keyset pagination ◀ NEXT TASK
 - 📖 **Learn (30 min):** [We need tool support for keyset pagination (Use The Index, Luke)](https://use-the-index-luke.com/no-offset) · [Pagination in EF Core](https://learn.microsoft.com/ef/core/querying/pagination) (keyset section)
+- 📝 **Notes:** [reading summary](../reading/M02-T3-keyset-pagination.md)
 - 🔨 **Build:** `GET /shipments?limit=50&cursor=…&status=…`, sorted by `(created_at, id)`, with an opaque base64 cursor and a `next` link. Seed 5,000 rows.
 - ✅ **Done when:** a test inserting rows *between* page requests proves no duplicates or gaps, and a second test shows the offset version producing a duplicate.
 

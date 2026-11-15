@@ -6,6 +6,13 @@ namespace FleetTrack.UnitTests.Domain;
 internal sealed class ShipmentTests
 {
     private static readonly DateTimeOffset CreatedAt = new(2026, 11, 11, 9, 30, 0, TimeSpan.Zero);
+    private static readonly string?[] InvalidDestinations =
+    [
+        null,
+        "",
+        "   ",
+        new string('x', Shipment.DestinationMaxLength + 1),
+    ];
 
     [Test]
     public void Create_StartsPendingWithVersion7Id()
@@ -23,13 +30,25 @@ internal sealed class ShipmentTests
         }
     }
 
-    [TestCase(null)]
-    [TestCase("")]
-    [TestCase("   ")]
-    public void Create_MissingDestination_Throws(string? destination)
+    [TestCaseSource(nameof(InvalidDestinations))]
+    public void Create_InvalidDestination_Throws(string? destination)
     {
         // Act & Assert
         Assert.That(() => Shipment.Create(CreatedAt, destination!), Throws.InstanceOf<ArgumentException>());
+    }
+
+    // The boundary: the limit is inclusive, so a check written as >= would fail here.
+    [Test]
+    public void Create_DestinationAtMaxLength_Succeeds()
+    {
+        // Arrange
+        var destination = new string('x', Shipment.DestinationMaxLength);
+
+        // Act
+        var shipment = Shipment.Create(CreatedAt, destination);
+
+        // Assert
+        Assert.That(shipment.Destination, Has.Length.EqualTo(Shipment.DestinationMaxLength));
     }
 
     [TestCase(ShipmentStatus.Pending, ShipmentStatus.InTransit)]
